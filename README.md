@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fiscale — GAR
 
-## Getting Started
+Applicazione web personale per la gestione della P.IVA in regime forfettario: registro incassi (tassazione per cassa), calcolo di imposta sostitutiva e contributi INPS Gestione Separata, scadenzario con stato di pagamento, esportazione CSV per il commercialista.
 
-First, run the development server:
+Uso strettamente personale, single-user. Non gestisce l'invio di fatture al Sistema di Interscambio (SDI): quello resta sul portale gratuito "Fatture e Corrispettivi" dell'Agenzia delle Entrate o su un servizio di fatturazione a scelta — qui si registrano solo gli estremi e gli incassi, dopo l'emissione.
+
+## Stack
+
+Next.js 15 (App Router) + TypeScript, Supabase (Postgres + Auth, con Row Level Security su ogni tabella), Tailwind CSS. Deploy su Vercel.
+
+## Struttura
+
+- `lib/domain/` — logica di calcolo pura, senza dipendenze da Supabase o Next.js: coefficiente di redditività, aliquote, generazione dello scadenzario. Coperta da test (`lib/domain/*.test.ts`).
+- `lib/data/` — accesso a Supabase, riceve un client già autenticato (dependency injection, non ne crea uno proprio: testabile e disaccoppiato dal contesto di richiesta).
+- `app/(app)/` — pagine autenticate (dashboard, incassi, spese, scadenze, impostazioni).
+- `app/login/` — accesso/registrazione.
+- `app/api/report/` — esportazione CSV degli incassi.
+
+Vedi `DECISIONS.md` per le scelte non ovvie e il loro perché.
+
+## Sviluppo locale
 
 ```bash
+npm install
+cp .env.example .env.local   # compila con URL e anon key del progetto Supabase
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Verifiche
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run typecheck   # TypeScript
+npm run lint        # ESLint
+npm run test        # Vitest — logica di calcolo e scadenzario
+npm run build        # build di produzione
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
+Deploy manuale su Vercel (nessun repository Git remoto collegato). Le variabili d'ambiente `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` sono pubbliche per natura (protette da RLS lato database, non da segretezza) e vanno impostate nel progetto Vercel.
 
-To learn more about Next.js, take a look at the following resources:
+Un repository Git con deploy automatico ad ogni push è il passo naturale successivo, quando questo progetto avrà una destinazione (GitHub, GitLab...): oggi è assente, quindi il deploy è manuale e va ripetuto esplicitamente ad ogni modifica.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Le tabelle vivono nel progetto Supabase `gar-fascicolo`, con prefisso `fiscale_` per restare logicamente separate dal resto del progetto (gestione pratiche clienti). Ogni tabella ha Row Level Security attiva, con policy `auth.uid() = user_id`.
 
-## Deploy on Vercel
+## Note di sicurezza note
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Registrazione account aperta (`supabase.auth.signUp`): per un'app single-user, valuta di disabilitare le registrazioni pubbliche dal pannello Supabase (Authentication → Providers) dopo aver creato il tuo account. Anche se qualcun altro si registrasse, RLS impedisce che veda dati diversi dai propri — ma è comunque una superficie da chiudere.
+- `fiscale_aliquote` è scrivibile da qualsiasi utente autenticato (non solo dal proprietario): scelta deliberata per un'app a singolo utente dove "autenticato" coincide con "Giovanni". Se in futuro l'app diventasse multi-utente, questa policy va ristretta.

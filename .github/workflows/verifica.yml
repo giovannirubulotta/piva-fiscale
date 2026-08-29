@@ -1,0 +1,59 @@
+# Pipeline di verifica: gira su ogni push e su ogni pull request.
+#
+# Il punto non è avere una spunta verde, è che una regressione non arrivi in
+# produzione senza che nessuno se ne accorga. Per questo i controlli falliscono
+# la build invece di limitarsi a segnalare: typecheck, lint, test del dominio
+# fiscale, contrasto WCAG e performance budget sono tutti bloccanti.
+name: Verifica
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un push che arriva mentre gira la verifica precedente la annulla: si verifica
+# l'ultimo stato del codice, non una coda di stati intermedi.
+concurrency:
+  group: verifica-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` e non `npm install`: installa esattamente ciò che è nel
+      # lockfile e fallisce se il lockfile è disallineato dal package.json.
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Controllo dei tipi
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Contrasto WCAG 2.1 AA
+        run: npm run contrasto
+
+      # Le variabili sono finte: la build deve compilare senza toccare il
+      # database reale. I segreti veri stanno solo su Vercel.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://esempio.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: chiave-finta-per-la-build
+
+      - name: Performance budget
+        run: npm run budget

@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { aggiornaAliquote, type EsitoForm } from "./actions";
 import type { AliquoteAnno } from "@/lib/domain/types";
+import { InfoCampo } from "@/components/InfoCampo";
+import { spiegazioni } from "@/lib/content/spiegazioniCampi";
 
 const statoIniziale: EsitoForm = { errore: null, successo: false };
 
@@ -13,7 +15,7 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
     <form action={azione} className="flex flex-col gap-4">
       <input type="hidden" name="anno" value={anno} />
       <div className="grid sm:grid-cols-2 gap-4">
-        <Campo etichetta="Imposta sostitutiva standard (%)">
+        <InfoCampo etichetta="Imposta sostitutiva standard (%)" spiegazione={spiegazioni.aliquotaSostitutivaStandard}>
           <input
             type="number"
             step="0.01"
@@ -22,8 +24,8 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
             required
             className="campo-input"
           />
-        </Campo>
-        <Campo etichetta="Imposta sostitutiva agevolata (%)">
+        </InfoCampo>
+        <InfoCampo etichetta="Imposta sostitutiva agevolata (%)" spiegazione={spiegazioni.aliquotaSostitutivaAgevolata}>
           <input
             type="number"
             step="0.01"
@@ -32,8 +34,8 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
             required
             className="campo-input"
           />
-        </Campo>
-        <Campo etichetta="Contributi INPS Gestione Separata (%)">
+        </InfoCampo>
+        <InfoCampo etichetta="Contributi INPS Gestione Separata (%)" spiegazione={spiegazioni.aliquotaInps}>
           <input
             type="number"
             step="0.01"
@@ -42,9 +44,9 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
             required
             className="campo-input"
           />
-        </Campo>
+        </InfoCampo>
         <div />
-        <Campo etichetta="Massimale INPS (€)">
+        <InfoCampo etichetta="Massimale INPS (€)" spiegazione={spiegazioni.massimaleInps}>
           <input
             type="number"
             step="1"
@@ -53,8 +55,8 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
             required
             className="campo-input"
           />
-        </Campo>
-        <Campo etichetta="Minimale INPS (€, ai fini dell'accredito)">
+        </InfoCampo>
+        <InfoCampo etichetta="Minimale INPS (€, ai fini dell'accredito)" spiegazione={spiegazioni.minimaleInps}>
           <input
             type="number"
             step="1"
@@ -63,7 +65,7 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
             required
             className="campo-input"
           />
-        </Campo>
+        </InfoCampo>
       </div>
 
       {stato.errore && <p className="text-sm text-danger">{stato.errore}</p>}
@@ -73,14 +75,5 @@ export function AliquoteForm({ anno, aliquote }: { anno: number; aliquote: Aliqu
         {inCorso ? "Salvataggio…" : `Salva aliquote ${anno}`}
       </button>
     </form>
-  );
-}
-
-function Campo({ etichetta, children }: { etichetta: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="text-ink-muted text-xs">{etichetta}</span>
-      {children}
-    </label>
   );
 }

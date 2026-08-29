@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { leggiIncassi } from "@/lib/data/incassi";
-import { formattaEuro } from "@/lib/ui/format";
+import { leggiClienti } from "@/lib/data/clienti";
+import { leggiFatture } from "@/lib/data/fatture";
+import { imponibileFiscale, numeroFattura } from "@/lib/domain/fattura";
 
 function csvEscape(valore: string): string {
   if (valore.includes(";") || valore.includes('"') || valore.includes("\n")) {
@@ -23,21 +24,37 @@ export async function GET(request: NextRequest) {
   const annoParam = request.nextUrl.searchParams.get("anno");
   const anno = annoParam ? Number(annoParam) : new Date().getFullYear();
 
-  const incassi = await leggiIncassi(supabase, user.id);
-  const dellAnno = incassi.filter(
-    (i) => i.stato !== "annullata" && new Date(i.dataEmissione).getFullYear() === anno
+  const [fatture, clienti] = await Promise.all([leggiFatture(supabase, user.id), leggiClienti(supabase, user.id)]);
+  const nomeCliente = new Map(
+    clienti.map((c) => [c.id, (c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ")) || "Senza nome"])
   );
 
-  const intestazione = ["Cliente", "Numero fattura", "Data emissione", "Data incasso", "Stato", "Importo netto", "Bollo"];
-  const righe = dellAnno.map((i) =>
+  const dellAnno = fatture.filter((f) => f.stato !== "annullata" && f.anno === anno);
+
+  const intestazione = [
+    "Tipo",
+    "Numero",
+    "Cliente",
+    "Data emissione",
+    "Data incasso",
+    "Stato",
+    "Imponibile",
+    "Bollo",
+    "Bollo riaddebitato",
+  ];
+  // Importi come numero grezzo con virgola decimale: un CSV finisce in un
+  // foglio di calcolo, dove "1.234,56 €" è testo e non si somma.
+  const righe = dellAnno.map((f) =>
     [
-      i.cliente,
-      i.numeroFattura ?? "",
-      i.dataEmissione,
-      i.dataIncasso ?? "",
-      i.stato,
-      formattaEuro(i.importoNetto),
-      i.bolloApplicato ? "sì" : "no",
+      f.tipoDocumento === "TD04" ? "Nota di credito" : "Fattura",
+      numeroFattura(f),
+      nomeCliente.get(f.clienteId) ?? "",
+      f.dataEmissione,
+      f.dataIncasso ?? "",
+      f.stato,
+      (f.tipoDocumento === "TD04" ? -imponibileFiscale(f) : imponibileFiscale(f)).toFixed(2).replace(".", ","),
+      f.bolloApplicato ? "sì" : "no",
+      f.bolloApplicato ? (f.bolloRiaddebitato ? "al cliente" : "a mio carico") : "",
     ]
       .map((v) => csvEscape(String(v)))
       .join(";")
@@ -50,7 +67,8 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="incassi-${anno}.csv"`,
+      "Content-Disposition": `attachment; filename="fatture-${anno}.csv"`,
+      "Cache-Control": "no-store, private",
     },
   });
 }

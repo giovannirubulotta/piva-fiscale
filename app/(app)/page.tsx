@@ -2,11 +2,19 @@ import Link from "next/link";
 import { richiediUtente } from "@/lib/auth";
 import { leggiProfilo } from "@/lib/data/profilo";
 import { leggiAliquote } from "@/lib/data/aliquote";
-import { leggiIncassi } from "@/lib/data/incassi";
+import { leggiFatture, leggiIncassiDaFatture } from "@/lib/data/fatture";
+import { leggiClienti } from "@/lib/data/clienti";
+import { numeroFattura, totaleDocumento } from "@/lib/domain/fattura";
+import { AndamentoFatturato, serieAnno } from "@/components/AndamentoFatturato";
+import { segnaIncassata } from "./fatture/actions";
 import { leggiStatiScadenze } from "@/lib/data/scadenzeStato";
-import { calcolaRiepilogoAnno, aliquoteAnno } from "@/lib/domain/calcolo";
+import { leggiRequisitiForfettario } from "@/lib/data/requisitiForfettario";
+import { contaErroriRecenti } from "@/lib/data/logErrori";
+import { calcolaRiepilogoAnno, aliquoteAnno, fatturatoIncassatoAnno } from "@/lib/domain/calcolo";
 import { riepiloghiAnniChiusi } from "@/lib/domain/orchestrazione";
 import { generaScadenzeAnnuali, generaScadenzeBollo } from "@/lib/domain/scadenzario";
+import { valutaRequisitiForfettario, valutaSoglieForfettario } from "@/lib/domain/requisitiForfettario";
+import type { EsitoRequisito } from "@/lib/domain/types";
 import { formattaEuro, formattaData, giorniMancanti } from "@/lib/ui/format";
 
 export default async function Dashboard() {
@@ -31,11 +39,15 @@ export default async function Dashboard() {
     );
   }
 
-  const [tutteLeAliquote, incassi, statiScadenze] = await Promise.all([
+  const [tutteLeAliquote, incassi, statiScadenze, requisiti, fatture, clienti] = await Promise.all([
     leggiAliquote(supabase),
-    leggiIncassi(supabase, user.id),
+    leggiIncassiDaFatture(supabase, user.id),
     leggiStatiScadenze(supabase, user.id),
+    leggiRequisitiForfettario(supabase, user.id, new Date().getFullYear()),
+    leggiFatture(supabase, user.id),
+    leggiClienti(supabase, user.id),
   ]);
+  const erroriRecenti = await contaErroriRecenti(supabase, user.id);
 
   const annoCorrente = new Date().getFullYear();
   const aliquoteCorrente = aliquoteAnno(tutteLeAliquote, annoCorrente);
@@ -71,9 +83,16 @@ export default async function Dashboard() {
 
   const bolloDaVersare = scadenzeBollo.reduce((sum, s) => sum + s.importoDovuto, 0);
 
-  const ultimiIncassi = [...incassi]
-    .sort((a, b) => (b.dataIncasso ?? b.dataEmissione).localeCompare(a.dataIncasso ?? a.dataEmissione))
-    .slice(0, 5);
+  const esitoRequisiti = valutaRequisitiForfettario(requisiti);
+  const soglia = valutaSoglieForfettario(fatturatoIncassatoAnno(incassi, annoCorrente));
+
+  const nomeCliente = new Map(
+    clienti.map((c) => [c.id, (c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ")) || "Senza nome"])
+  );
+  const daIncassare = fatture
+    .filter((f) => f.stato === "emessa")
+    .sort((a, b) => a.dataEmissione.localeCompare(b.dataEmissione));
+  const totaleDaIncassare = daIncassare.reduce((somma, f) => somma + totaleDocumento(f), 0);
 
   return (
     <div className="flex flex-col gap-8">
@@ -99,6 +118,31 @@ export default async function Dashboard() {
         </div>
       )}
 
+      {erroriRecenti > 0 && (
+        <div className="rounded-xl border border-warn/40 bg-warn/10 px-5 py-4">
+          <p className="text-sm text-warn font-medium">
+            {erroriRecenti === 1
+              ? "Nelle ultime 24 ore l'applicazione ha incontrato un errore."
+              : `Nelle ultime 24 ore l'applicazione ha incontrato ${erroriRecenti} errori.`}
+          </p>
+          <Link href="/diagnostica" className="text-sm text-warn underline mt-1 inline-block">
+            Vedi la diagnostica
+          </Link>
+        </div>
+      )}
+
+      {esitoRequisiti.esitoGlobale === "escluso" && (
+        <div className="rounded-xl border border-danger/40 bg-danger/10 px-5 py-4">
+          <p className="text-sm text-danger font-medium">
+            Hai dichiarato una causa di esclusione dal regime forfettario: verifica con un commercialista come
+            procedere.
+          </p>
+          <Link href="/requisiti" className="text-sm text-danger underline mt-1 inline-block">
+            Vai a Requisiti regime
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Riquadro etichetta="Fatturato incassato YTD" valore={formattaEuro(riepilogoCorrente.fatturatoIncassato)} />
         <Riquadro etichetta="Imponibile stimato" valore={formattaEuro(riepilogoCorrente.imponibile)} />
@@ -111,7 +155,7 @@ export default async function Dashboard() {
         <Riquadro etichetta="Netto stimato in tasca" valore={formattaEuro(riepilogoCorrente.nettoStimato)} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         <div className="rounded-xl border border-line bg-surface p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wide mb-2">Prossima scadenza</div>
           {prossimaScadenza ? (
@@ -145,34 +189,83 @@ export default async function Dashboard() {
             Su fatture senza IVA sopra 77,47 €, cumulato sugli ultimi due trimestri tracciati.
           </p>
         </div>
+
+        <div className="rounded-xl border border-line bg-surface p-5">
+          <div className="text-xs text-ink-muted uppercase tracking-wide mb-2">Requisiti regime forfettario</div>
+          <div className={`text-lg font-medium ${TESTO_ESITO[esitoRequisiti.esitoGlobale]}`}>
+            {TITOLO_ESITO[esitoRequisiti.esitoGlobale]}
+          </div>
+          <p className="text-sm text-ink-muted mt-1">{soglia.messaggio}</p>
+          <Link href="/requisiti" className="text-sm text-accent hover:underline mt-2 inline-block">
+            Vai a Requisiti regime →
+          </Link>
+        </div>
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide">Ultimi incassi</h2>
-          <Link href="/incassi" className="text-sm text-accent hover:underline">
-            Gestisci incassi →
+          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide">Fatture da incassare</h2>
+          <Link href="/fatture" className="text-sm text-accent hover:underline">
+            Tutte le fatture →
           </Link>
         </div>
-        {ultimiIncassi.length === 0 ? (
-          <p className="text-sm text-ink-muted">Nessun incasso registrato ancora.</p>
+        {daIncassare.length === 0 ? (
+          <div className="rounded-xl border border-line bg-surface px-5 py-6 text-center">
+            <p className="text-sm text-ink-muted mb-3">Nessuna fattura in attesa di incasso.</p>
+            <Link href="/fatture/nuova" className="text-sm text-accent hover:underline">
+              Emetti una fattura →
+            </Link>
+          </div>
         ) : (
-          <div className="rounded-xl border border-line bg-surface divide-y divide-line">
-            {ultimiIncassi.map((i) => (
-              <div key={i.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                <div>
-                  <div className="text-ink">{formattaEuro(i.importoNetto)}</div>
-                  <div className="text-ink-faint text-xs">{formattaData(i.dataIncasso ?? i.dataEmissione)}</div>
+          <div className="rounded-xl border border-line bg-surface overflow-hidden">
+            <div className="px-5 py-3 border-b border-line bg-accent-soft/40 text-sm text-accent">
+              {daIncassare.length === 1
+                ? `C'è 1 fattura da incassare per un totale di ${formattaEuro(totaleDaIncassare)}`
+                : `Ci sono ${daIncassare.length} fatture da incassare per un totale di ${formattaEuro(totaleDaIncassare)}`}
+            </div>
+            <div className="divide-y divide-line">
+              {daIncassare.slice(0, 5).map((f) => (
+                <div
+                  key={f.id}
+                  className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm"
+                >
+                  <Link href={`/fatture/${f.id}`} className="min-w-0 flex-1 hover:text-accent transition">
+                    <div className="font-medium truncate">{nomeCliente.get(f.clienteId) ?? "—"}</div>
+                    <div className="text-xs text-ink-faint">
+                      {numeroFattura(f)} · {formattaData(f.dataEmissione)}
+                    </div>
+                  </Link>
+                  <div className="tabular-nums shrink-0">{formattaEuro(totaleDocumento(f))}</div>
+                  <form action={segnaIncassata} className="shrink-0">
+                    <input type="hidden" name="id" value={f.id} />
+                    <button type="submit" className="btn-primario text-xs px-3 py-1.5">
+                      Incassa
+                    </button>
+                  </form>
                 </div>
-                <StatoBadge stato={i.stato} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
+
+      <AndamentoFatturato serie={[serieAnno(incassi, annoCorrente), serieAnno(incassi, annoCorrente - 1)]} />
+
     </div>
   );
 }
+
+const TITOLO_ESITO: Record<EsitoRequisito, string> = {
+  ok: "Nessuna causa dichiarata",
+  da_verificare: "Da verificare",
+  escluso: "Causa di esclusione dichiarata",
+};
+
+const TESTO_ESITO: Record<EsitoRequisito, string> = {
+  ok: "text-ok",
+  da_verificare: "text-warn",
+  escluso: "text-danger",
+};
 
 function Riquadro({ etichetta, valore, accento }: { etichetta: string; valore: string; accento?: boolean }) {
   return (
@@ -183,12 +276,3 @@ function Riquadro({ etichetta, valore, accento }: { etichetta: string; valore: s
   );
 }
 
-function StatoBadge({ stato }: { stato: "da_incassare" | "incassata" | "annullata" }) {
-  const mappa = {
-    da_incassare: { testo: "da incassare", classe: "bg-warn-soft text-warn" },
-    incassata: { testo: "incassata", classe: "bg-ok-soft text-ok" },
-    annullata: { testo: "annullata", classe: "bg-surface-2 text-ink-faint" },
-  } as const;
-  const { testo, classe } = mappa[stato];
-  return <span className={`text-xs px-2 py-1 rounded-full ${classe}`}>{testo}</span>;
-}

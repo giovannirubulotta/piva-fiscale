@@ -253,3 +253,52 @@ Elencati perché siano tracciabili, non nascosti:
 3. **Core Web Vitals non misurati sul campo** (sopra).
 4. **Ambiente di staging assente** finché il repository non è collegato.
 5. **`fiscale_incassi`** ancora presente come backup della migrazione, da eliminare dopo verifica.
+
+## Fase 7: chiusura dei gap residui dello standard
+
+Prosecuzione della fase 6, sui punti che erano rimasti dichiarati ma non risolti.
+
+### Test end-to-end sui percorsi critici
+
+Era il gap di qualità più rilevante e l'avevo segnalato io stesso. Playwright, 44 test su desktop e mobile (metà dell'uso previsto è da telefono: verificare solo il desktop verificherebbe metà del prodotto). Coprono il perimetro di autenticazione su sedici rotte, gli endpoint API che non devono restituire dati a un anonimo, la pagina di accesso e quattro controlli di accessibilità.
+
+Girano contro la build di produzione, non contro `next dev`: il server di sviluppo ha comportamenti propri — ricompilazione, overlay degli errori — che non sono quelli che l'utente incontra, e verificare qualcosa di diverso da ciò che si rilascia è verificare poco.
+
+**Un test che passava per il motivo sbagliato**, vale la pena registrarlo. La prima versione asseriva che `/api/report` restituisse uno stato ≥ 300 a un anonimo, e falliva con 200. Sembrava un buco di sicurezza; verificato con `curl`, l'endpoint restituisce correttamente 307 verso il login. Era Playwright che segue i redirect per impostazione predefinita, quindi il 200 era la pagina di login. Corretto il test con `maxRedirects: 0` e aggiunto un controllo sul corpo della risposta: l'asserzione che conta non è sullo stato ma sul fatto che nessun dato fiscale raggiunga chi non è autenticato.
+
+**Non coperti**: i flussi autenticati (creare un cliente, emettere una fattura, scaricare l'XML). Richiedono credenziali di prova su un progetto Supabase dedicato — un ambiente di test separato da quello reale, che non esiste finché non c'è la separazione degli ambienti. Gap dichiarato, non chiuso.
+
+### Duplicazione logica oltre la terza occorrenza
+
+La composizione del nome del cliente era replicata in otto file, il controllo di completezza per l'XML in due. La prima era verbosità; la seconda era un rischio reale: `clientePronto` (interfaccia) e `validaFatturaPerXml` (generatore) rispondevano alla stessa domanda in due punti diversi, e se una fosse cambiata senza l'altra l'app avrebbe promesso un file che il generatore avrebbe poi rifiutato — o peggio, avrebbe lasciato generare un XML che lo SDI avrebbe scartato.
+
+Estratte in `lib/domain/cliente.ts`, con un test che **lega le due definizioni** su sette casi: divergere ora costa un test rosso invece di una fattura scartata. Effetto collaterale utile: l'anagrafica dice quali dati mancano invece di limitarsi a marcare la riga.
+
+### Conformità GDPR portata dentro il prodotto
+
+Nella fase 6 avevo segnalato il rischio e lo avevo lasciato come adempimento dell'utente. Rileggendo lo standard — "verificato in fase di produzione e non lasciato come responsabilità implicita del cliente" — quella era una mezza misura: la pagina `/privacy` ora elenca cosa viene trattato, dove risiede, chi sono i responsabili del trattamento (Supabase e Vercel, da nominare formalmente) e i sei adempimenti che ricadono sull'utilizzatore in quanto titolare. Il testo è scritto per essere riutilizzato verso i propri clienti, non solo letto una volta.
+
+Sui cookie non serve banner: la sessione di autenticazione usa cookie tecnici, per i quali il consenso non è richiesto, e non ci sono script di terze parti né strumenti di analisi.
+
+### Versionamento semantico
+
+`1.0.0` con `CHANGELOG.md`. La semantica è dichiarata e non generica: **MAJOR** quando cambia il calcolo delle imposte o il formato dei documenti trasmessi — cose che possono cambiare quanto si versa o far scartare una fattura — **MINOR** per funzionalità, **PATCH** per correzioni.
+
+### Errore di processo commesso e corretto
+
+Il primo tentativo di commit di questa fase ha usato `git add -A`, impastando quattro unità logiche in un commit unico: esattamente ciò che lo standard vieta ("nessuna commistione tra refactoring e nuova funzionalità nel medesimo commit"). Corretto con un reset e cinque commit separati. Registrato qui perché una storia git pulita ottenuta per caso non è un processo.
+
+### Funzioni oltre le 50 righe
+
+L'audit ne ha trovate dodici. Undici sono componenti React: JSX dichiarativo, dove la lunghezza misura la quantità di markup e non la complessità ciclomatica, e spezzarli produrrebbe componenti senza identità propria pur di rispettare un numero. Non toccate deliberatamente.
+
+`generaXmlFattura` (128 righe) è invece logica imperativa e sarebbe da scomporre in costruttori di header e body. Non fatto in questa passata: è coperto da 30 test che ne fissano struttura e ordine dei tag, quindi il rischio è basso, ma resta debito tecnico dichiarato.
+
+### Gap che restano aperti
+
+1. **Flussi autenticati non coperti dai test E2E** (sopra): serve un progetto Supabase di test.
+2. **Validazione XSD dell'XML in CI**: le fonti AdE rispondono 403 ai client automatici, lo schema va scaricato a mano da browser e committato. Serve un'azione dell'utente.
+3. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
+4. **Ambiente di staging**: dipende dal collegamento del repository.
+5. **`generaXmlFattura` da scomporre** (sopra).
+6. **`fiscale_incassi`** da eliminare dopo verifica.

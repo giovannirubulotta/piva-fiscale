@@ -41,6 +41,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # xmllint valida l'XML FatturaPA contro lo schema ufficiale. Su
+      # ubuntu-latest c'è già, ma installarlo esplicitamente evita che il test
+      # si salti in silenzio se un giorno l'immagine cambia: un controllo
+      # saltato senza accorgersene è peggio di un controllo assente.
+      - name: Assicura xmllint per la validazione XSD
+        run: |
+          command -v xmllint >/dev/null 2>&1 || sudo apt-get install -y --no-install-recommends libxml2-utils
+          xmllint --version
+
       - name: Test
         run: npm run test
 

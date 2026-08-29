@@ -9,6 +9,7 @@ import { validaFatturaPerXml } from "@/lib/domain/fatturaXml";
 import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { StatoBadge } from "@/components/StatoBadge";
 import { cambiaStatoFattura, rimuoviFattura, segnaIncassata } from "../actions";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 export default async function PaginaFattura({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,9 +41,7 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
 
   const imponibile = totaleRighe(fattura.righe);
   const totale = totaleDocumento(fattura);
-  const nomeCliente = cliente
-    ? (cliente.denominazione ?? [cliente.nome, cliente.cognome].filter(Boolean).join(" ")) || "Senza nome"
-    : "—";
+  const intestatario = cliente ? nomeCliente(cliente) : "—";
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -57,7 +56,7 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
           <StatoBadge stato={fattura.stato} />
         </div>
         <p className="text-sm text-ink-muted mt-1">
-          {nomeCliente} · {formattaData(fattura.dataEmissione)}
+          {intestatario} · {formattaData(fattura.dataEmissione)}
           {riferimento && ` · storna la fattura ${numeroFattura(riferimento)}`}
         </p>
       </div>

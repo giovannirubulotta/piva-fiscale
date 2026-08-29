@@ -3,9 +3,9 @@ import { richiediUtente } from "@/lib/auth";
 import { leggiClienti } from "@/lib/data/clienti";
 import { leggiFatture } from "@/lib/data/fatture";
 import { formattaData } from "@/lib/ui/format";
-import type { Cliente } from "@/lib/domain/types";
 import { ETICHETTA_TIPOLOGIA_CLIENTE } from "./ClienteForm";
 import { RicercaClienti } from "./RicercaClienti";
+import { clientePronto, datiMancanti, identificativoFiscale, nomeCliente } from "@/lib/domain/cliente";
 
 export default async function PaginaClienti({
   searchParams,
@@ -54,14 +54,15 @@ export default async function PaginaClienti({
         <RicercaClienti
           clienti={clienti.map((c) => ({
             id: c.id,
-            nome: nomeVisualizzato(c),
+            nome: nomeCliente(c),
             tipologia: ETICHETTA_TIPOLOGIA_CLIENTE[c.tipologia],
-            identificativo: c.partitaIva ?? c.codiceFiscale ?? null,
+            identificativo: identificativoFiscale(c),
             email: c.email,
             telefono: c.telefono,
             citta: c.comune,
             ultimaFattura: ultimaFattura.get(c.id) ? formattaData(ultimaFattura.get(c.id)!) : null,
-            completo: completoPerXml(c),
+            completo: clientePronto(c),
+            mancanti: datiMancanti(c),
           }))}
         />
       )}
@@ -69,15 +70,4 @@ export default async function PaginaClienti({
   );
 }
 
-export function nomeVisualizzato(cliente: Cliente): string {
-  if (cliente.denominazione) return cliente.denominazione;
-  return [cliente.nome, cliente.cognome].filter(Boolean).join(" ") || "Senza nome";
-}
 
-/** Un cliente è pronto per la fattura elettronica solo se ha tutti i campi che l'XML richiede. */
-function completoPerXml(cliente: Cliente): boolean {
-  const haIdentificativo = Boolean(cliente.partitaIva || cliente.codiceFiscale);
-  const haSede = Boolean(cliente.indirizzo && cliente.cap && cliente.comune);
-  const haCodice = /^[A-Z0-9]{7}$/.test(cliente.codiceDestinatario.toUpperCase());
-  return haIdentificativo && haSede && haCodice;
-}

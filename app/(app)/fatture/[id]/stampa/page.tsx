@@ -7,6 +7,7 @@ import { leggiDatiEmittente } from "@/lib/data/profilo";
 import { IMPORTO_BOLLO, dataScadenzaPagamento, numeroFattura, totaleDocumento, totaleRiga, totaleRighe } from "@/lib/domain/fattura";
 import { CAUSALI_FORFETTARIO } from "@/lib/domain/fatturaXml";
 import { formattaData, formattaEuro } from "@/lib/ui/format";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 /**
  * Copia di cortesia della fattura, impaginata per la stampa.
@@ -34,9 +35,7 @@ export default async function PaginaStampaFattura({ params }: { params: Promise<
 
   const imponibile = totaleRighe(fattura.righe);
   const totale = totaleDocumento(fattura);
-  const nomeCliente = cliente
-    ? (cliente.denominazione ?? [cliente.nome, cliente.cognome].filter(Boolean).join(" ")) || "Senza nome"
-    : "—";
+  const intestatario = cliente ? nomeCliente(cliente) : "—";
 
   return (
     <>
@@ -99,7 +98,7 @@ export default async function PaginaStampaFattura({ params }: { params: Promise<
 
           <section className="border-t border-line pt-5">
             <div className="text-xs uppercase tracking-wide text-ink-faint mb-1">Destinatario</div>
-            <div className="font-medium">{nomeCliente}</div>
+            <div className="font-medium">{intestatario}</div>
             <div className="text-xs text-ink-muted leading-relaxed mt-0.5">
               {cliente?.indirizzo} {cliente?.numeroCivico}
               <br />

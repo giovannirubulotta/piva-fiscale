@@ -16,6 +16,7 @@ import { generaScadenzeAnnuali, generaScadenzeBollo } from "@/lib/domain/scadenz
 import { valutaRequisitiForfettario, valutaSoglieForfettario } from "@/lib/domain/requisitiForfettario";
 import type { EsitoRequisito } from "@/lib/domain/types";
 import { formattaEuro, formattaData, giorniMancanti } from "@/lib/ui/format";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 export default async function Dashboard() {
   const { supabase, user } = await richiediUtente();
@@ -86,9 +87,7 @@ export default async function Dashboard() {
   const esitoRequisiti = valutaRequisitiForfettario(requisiti);
   const soglia = valutaSoglieForfettario(fatturatoIncassatoAnno(incassi, annoCorrente));
 
-  const nomeCliente = new Map(
-    clienti.map((c) => [c.id, (c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ")) || "Senza nome"])
-  );
+  const nomiClienti = new Map(clienti.map((c) => [c.id, nomeCliente(c)]));
   const daIncassare = fatture
     .filter((f) => f.stato === "emessa")
     .sort((a, b) => a.dataEmissione.localeCompare(b.dataEmissione));
@@ -230,7 +229,7 @@ export default async function Dashboard() {
                   className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm"
                 >
                   <Link href={`/fatture/${f.id}`} className="min-w-0 flex-1 hover:text-accent transition">
-                    <div className="font-medium truncate">{nomeCliente.get(f.clienteId) ?? "—"}</div>
+                    <div className="font-medium truncate">{nomiClienti.get(f.clienteId) ?? "—"}</div>
                     <div className="text-xs text-ink-faint">
                       {numeroFattura(f)} · {formattaData(f.dataEmissione)}
                     </div>

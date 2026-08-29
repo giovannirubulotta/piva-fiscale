@@ -5,6 +5,7 @@ import { leggiFatture } from "@/lib/data/fatture";
 import { numeroFattura, totaleDocumento } from "@/lib/domain/fattura";
 import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { StatoBadge } from "@/components/StatoBadge";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 export default async function PaginaFatture() {
   const { supabase, user } = await richiediUtente();
@@ -13,9 +14,7 @@ export default async function PaginaFatture() {
     leggiClienti(supabase, user.id),
   ]);
 
-  const nomeCliente = new Map(
-    clienti.map((c) => [c.id, (c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ")) || "Senza nome"])
-  );
+  const nomiClienti = new Map(clienti.map((c) => [c.id, nomeCliente(c)]));
 
   const daIncassare = fatture.filter((f) => f.stato === "emessa");
   const totaleDaIncassare = daIncassare.reduce((somma, f) => somma + totaleDocumento(f), 0);
@@ -69,7 +68,7 @@ export default async function PaginaFatture() {
                       {f.tipoDocumento === "TD04" && <span className="text-ink-faint">NC </span>}
                       {numeroFattura(f)}
                     </div>
-                    <div className="text-xs text-ink-muted truncate">{nomeCliente.get(f.clienteId) ?? "—"}</div>
+                    <div className="text-xs text-ink-muted truncate">{nomiClienti.get(f.clienteId) ?? "—"}</div>
                   </div>
                   <StatoBadge stato={f.stato} />
                 </div>
@@ -106,7 +105,7 @@ export default async function PaginaFatture() {
                         {numeroFattura(f)}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-ink-muted">{nomeCliente.get(f.clienteId) ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink-muted">{nomiClienti.get(f.clienteId) ?? "—"}</td>
                     <td className="px-4 py-3 text-ink-muted">{formattaData(f.dataEmissione)}</td>
                     <td
                       className={`px-4 py-3 text-right tabular-nums ${f.tipoDocumento === "TD04" ? "text-danger" : ""}`}

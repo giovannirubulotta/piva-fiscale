@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { leggiClienti } from "@/lib/data/clienti";
 import { leggiFatture } from "@/lib/data/fatture";
 import { imponibileFiscale, numeroFattura } from "@/lib/domain/fattura";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 function csvEscape(valore: string): string {
   if (valore.includes(";") || valore.includes('"') || valore.includes("\n")) {
@@ -25,9 +26,7 @@ export async function GET(request: NextRequest) {
   const anno = annoParam ? Number(annoParam) : new Date().getFullYear();
 
   const [fatture, clienti] = await Promise.all([leggiFatture(supabase, user.id), leggiClienti(supabase, user.id)]);
-  const nomeCliente = new Map(
-    clienti.map((c) => [c.id, (c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ")) || "Senza nome"])
-  );
+  const nomiClienti = new Map(clienti.map((c) => [c.id, nomeCliente(c)]));
 
   const dellAnno = fatture.filter((f) => f.stato !== "annullata" && f.anno === anno);
 
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
     [
       f.tipoDocumento === "TD04" ? "Nota di credito" : "Fattura",
       numeroFattura(f),
-      nomeCliente.get(f.clienteId) ?? "",
+      nomiClienti.get(f.clienteId) ?? "",
       f.dataEmissione,
       f.dataIncasso ?? "",
       f.stato,

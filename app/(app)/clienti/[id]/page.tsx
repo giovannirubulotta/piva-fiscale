@@ -4,6 +4,7 @@ import { richiediUtente } from "@/lib/auth";
 import { leggiCliente } from "@/lib/data/clienti";
 import { ClienteForm } from "../ClienteForm";
 import { salvaModificaCliente } from "../actions";
+import { nomeCliente } from "@/lib/domain/cliente";
 
 export default async function PaginaModificaCliente({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +19,7 @@ export default async function PaginaModificaCliente({ params }: { params: Promis
           ← Clienti
         </Link>
         <h1 className="text-xl font-semibold mt-2">
-          {cliente.denominazione ?? [cliente.nome, cliente.cognome].filter(Boolean).join(" ")}
+          {nomeCliente(cliente)}
         </h1>
       </div>
       <ClienteForm cliente={cliente} azione={salvaModificaCliente} />

@@ -15,6 +15,8 @@ export interface VoceCliente {
   ultimaFattura: string | null;
   /** false se mancano dati obbligatori per generare l'XML: si segnala prima, non al momento dell'invio. */
   completo: boolean;
+  /** Quali dati mancano: dirlo è più utile che limitarsi a marcare la riga. */
+  mancanti: string[];
 }
 
 /**
@@ -87,7 +89,7 @@ export function RicercaClienti({ clienti }: { clienti: VoceCliente[] }) {
                     <div className="font-medium truncate">{c.nome}</div>
                     <div className="text-xs text-ink-muted">{c.tipologia}</div>
                   </div>
-                  {!c.completo && <BadgeIncompleto />}
+                  {!c.completo && <BadgeIncompleto mancanti={c.mancanti} />}
                 </div>
                 <dl className="text-xs text-ink-muted flex flex-col gap-0.5">
                   {c.identificativo && (
@@ -134,7 +136,7 @@ export function RicercaClienti({ clienti }: { clienti: VoceCliente[] }) {
                       <span className="font-medium">{c.nome}</span>
                       {!c.completo && (
                         <span className="ml-2 align-middle">
-                          <BadgeIncompleto />
+                          <BadgeIncompleto mancanti={c.mancanti} />
                         </span>
                       )}
                     </td>
@@ -156,11 +158,11 @@ export function RicercaClienti({ clienti }: { clienti: VoceCliente[] }) {
   );
 }
 
-function BadgeIncompleto() {
+function BadgeIncompleto({ mancanti }: { mancanti: string[] }) {
   return (
     <span
       className="text-[10px] uppercase tracking-wide text-warn border border-warn/40 bg-warn/10 rounded-full px-2 py-0.5 whitespace-nowrap"
-      title="Mancano dati obbligatori per la fattura elettronica: identificativo fiscale, sede o codice destinatario."
+      title={`Per la fattura elettronica manca: ${mancanti.join(", ")}.`}
     >
       Dati incompleti
     </span>

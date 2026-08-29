@@ -6,6 +6,7 @@ import { leggiFatture } from "@/lib/data/fatture";
 import { numeroFattura } from "@/lib/domain/fattura";
 import { oggiRoma } from "@/lib/domain/fatturaXml";
 import { NuovaFatturaForm } from "../NuovaFatturaForm";
+import { clientePronto, identificativoFiscale, nomeCliente } from "@/lib/domain/cliente";
 
 export default async function PaginaNuovaFattura() {
   const { supabase, user } = await richiediUtente();
@@ -52,14 +53,11 @@ export default async function PaginaNuovaFattura() {
         }
         clienti={clienti.map((c) => ({
           id: c.id,
-          nome: c.denominazione ?? [c.nome, c.cognome].filter(Boolean).join(" ") ?? "Senza nome",
+          nome: nomeCliente(c),
           indirizzo: c.indirizzo,
           citta: c.comune,
-          identificativo: c.partitaIva ? `P.IVA ${c.partitaIva}` : c.codiceFiscale ? `C.F. ${c.codiceFiscale}` : null,
-          completo: Boolean(
-            (c.partitaIva || c.codiceFiscale) && c.indirizzo && c.cap && c.comune &&
-            /^[A-Z0-9]{7}$/.test(c.codiceDestinatario.toUpperCase())
-          ),
+          identificativo: identificativoFiscale(c),
+          completo: clientePronto(c),
         }))}
         fattureStornabili={fatture
           .filter((f) => f.tipoDocumento === "TD01" && f.stato !== "annullata")

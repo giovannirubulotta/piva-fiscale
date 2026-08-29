@@ -22,6 +22,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
     { href: "/riferimenti-normativi", etichetta: "Riferimenti normativi" },
     { href: "/impostazioni", etichetta: "Impostazioni" },
     { href: "/diagnostica", etichetta: "Diagnostica" },
+    { href: "/privacy", etichetta: "Privacy e dati" },
     { href: `/api/report?anno=${annoCorrente}`, etichetta: "Esporta CSV" },
   ];
 

@@ -34,28 +34,52 @@ describe("generaScadenzeAnnuali", () => {
     expect(saldoInps?.importo).toBe(2033.46);
     expect(saldoInps?.codiceTributo).toBe("P10");
 
-    // 1170 > 257,52 -> due rate da 585 ciascuna
+    // 1170 > 257,52 -> due rate 40%/60% (art. 17 c. 3 DPR 435/2001)
     const acconto1 = scadenze.find((s) => s.chiave === "2027-acconto1-imposta");
     const acconto2 = scadenze.find((s) => s.chiave === "2027-acconto2-imposta");
-    expect(acconto1?.importo).toBe(585);
+    expect(acconto1?.importo).toBe(468);
     expect(acconto1?.dataScadenza).toBe("2027-06-30");
-    expect(acconto2?.importo).toBe(585);
+    expect(acconto2?.importo).toBe(702);
     expect(acconto2?.dataScadenza).toBe("2027-11-30");
+
+    // acconto INPS: 80% del saldo dell'anno precedente, due rate UGUALI del 40%
+    const accontoInps1 = scadenze.find((s) => s.chiave === "2027-acconto1-inps");
+    const accontoInps2 = scadenze.find((s) => s.chiave === "2027-acconto2-inps");
+    expect(accontoInps1?.importo).toBe(813.38);
+    expect(accontoInps1?.dataScadenza).toBe("2027-06-30");
+    expect(accontoInps2?.importo).toBe(813.38);
+    expect(accontoInps2?.dataScadenza).toBe("2027-11-30");
   });
 
-  it("usa la rata unica se l'importo è sotto la soglia di 257,52 €", () => {
+  it("usa la rata unica se l'importo dell'imposta è sotto la soglia di 257,52 €", () => {
     const scadenze = generaScadenzeAnnuali([riepilogo({ impostaSostitutiva: 200, contributiInps: 100 })]);
     const accontoUnico = scadenze.find((s) => s.chiave === "2027-acconto-unico-imposta");
     expect(accontoUnico?.importo).toBe(200);
     expect(scadenze.find((s) => s.chiave === "2027-acconto2-imposta")).toBeUndefined();
+
+    // l'acconto INPS non conosce la soglia di rata unica: resta in due rate da 40
+    const accontoInps1 = scadenze.find((s) => s.chiave === "2027-acconto1-inps");
+    const accontoInps2 = scadenze.find((s) => s.chiave === "2027-acconto2-inps");
+    expect(accontoInps1?.importo).toBe(40);
+    expect(accontoInps2?.importo).toBe(40);
   });
 
-  it("non genera acconto se l'importo è sotto la soglia di esenzione", () => {
+  it("non genera acconto imposta se l'importo è sotto la soglia di esenzione (51,65 €)", () => {
     const scadenze = generaScadenzeAnnuali([riepilogo({ impostaSostitutiva: 30, contributiInps: 20 })]);
     expect(scadenze.some((s) => s.tipo === "acconto1_imposta")).toBe(false);
-    expect(scadenze.some((s) => s.tipo === "acconto1_inps")).toBe(false);
     // il saldo resta comunque dovuto
     expect(scadenze.some((s) => s.chiave === "2026-saldo-imposta")).toBe(true);
+  });
+
+  it("genera comunque l'acconto INPS anche per importi minimi: non esiste una soglia di esenzione", () => {
+    // A differenza dell'imposta sostitutiva, l'acconto INPS Gestione Separata
+    // non ha né soglia di esenzione né soglia di rata unica: è sempre l'80%
+    // del saldo precedente, in due rate uguali del 40%.
+    const scadenze = generaScadenzeAnnuali([riepilogo({ impostaSostitutiva: 30, contributiInps: 20 })]);
+    const accontoInps1 = scadenze.find((s) => s.chiave === "2027-acconto1-inps");
+    const accontoInps2 = scadenze.find((s) => s.chiave === "2027-acconto2-inps");
+    expect(accontoInps1?.importo).toBe(8);
+    expect(accontoInps2?.importo).toBe(8);
   });
 
   it("concatena correttamente più anni consecutivi", () => {
@@ -95,9 +119,11 @@ describe("generaScadenzeBollo", () => {
     const q1 = scadenze.find((s) => s.trimestre === 1);
     expect(q1?.importoDovuto).toBe(4); // 2 fatture * 2€
     expect(q1?.dataScadenza).toBe("2026-05-31");
+    expect(q1?.codiceTributo).toBe("2521");
 
     const q3 = scadenze.find((s) => s.trimestre === 3);
     expect(q3?.importoDovuto).toBe(2);
     expect(q3?.dataScadenza).toBe("2026-11-30");
+    expect(q3?.codiceTributo).toBe("2523");
   });
 });

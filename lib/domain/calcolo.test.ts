@@ -121,10 +121,12 @@ describe("calcolaRiepilogoAnno", () => {
 
     expect(riepilogo.fatturatoIncassato).toBe(10000);
     expect(riepilogo.imponibile).toBe(7800);
-    expect(riepilogo.impostaSostitutiva).toBe(1170); // 7800 * 0.15
+    // L'imposta sostitutiva si applica al reddito NETTO dei contributi INPS
+    // (art. 1 comma 64 L. 190/2014): (7800 - 2033,46) * 0.15 = 864,98.
+    expect(riepilogo.impostaSostitutiva).toBe(864.98);
     expect(riepilogo.contributiInps).toBe(2033.46); // 7800 * 0.2607
-    expect(riepilogo.totaleDovuto).toBe(3203.46);
-    expect(riepilogo.nettoStimato).toBe(6796.54);
+    expect(riepilogo.totaleDovuto).toBe(2898.44);
+    expect(riepilogo.nettoStimato).toBe(7101.56);
     expect(riepilogo.primoAnno).toBe(true);
   });
 
@@ -133,8 +135,9 @@ describe("calcolaRiepilogoAnno", () => {
     const profilo: ProfiloFiscale = { ...profiloBase, agevolazione5Percento: true };
     const riepilogo = calcolaRiepilogoAnno(2026, incassi, profilo, aliquote2026);
 
-    expect(riepilogo.impostaSostitutiva).toBe(390); // 7800 * 0.05
-    expect(riepilogo.totaleDovuto).toBe(2423.46);
+    // (7800 - 2033,46) * 0.05 = 288,33
+    expect(riepilogo.impostaSostitutiva).toBe(288.33);
+    expect(riepilogo.totaleDovuto).toBe(2321.79);
   });
 
   it("restituisce zero su un anno senza incassi", () => {

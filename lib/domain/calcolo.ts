@@ -52,6 +52,26 @@ export function primoAnnoAttivita(profilo: ProfiloFiscale, anno: number): boolea
   return new Date(profilo.dataApertura).getFullYear() === anno;
 }
 
+/**
+ * L'imposta sostitutiva si applica al reddito forfettario NETTO dei
+ * contributi previdenziali obbligatori, non al reddito lordo: art. 1 comma
+ * 64 L. 190/2014 — "il reddito [...] è ridotto dei contributi previdenziali
+ * dovuti per legge" — prima di applicare l'aliquota del 15%/5%. Corregge un
+ * difetto per cui l'imposta sostitutiva era calcolata sul reddito lordo,
+ * sovrastimando sistematicamente l'imposta dovuta di un importo pari
+ * all'aliquota sostitutiva applicata ai contributi INPS dell'anno; verificato
+ * il 28/08/2026 su più fonti indipendenti (vedi DECISIONS.md). Come per
+ * LM36/LM49 nel Quadro LM, la base non può scendere sotto zero: l'eventuale
+ * eccedenza di contributi non capiente nel reddito forfettario non genera
+ * un'imposta sostitutiva negativa.
+ *
+ * Approssimazione nota: qui si deducono i contributi INPS calcolati per
+ * competenza sul reddito dell'anno stesso, non quelli realmente versati per
+ * cassa nell'anno (che possono riferirsi in parte all'anno precedente, per
+ * effetto del meccanismo di acconto/saldo) — coerente con il resto
+ * dell'app, che tratta `contributiInps` come stima per competenza, e
+ * segnalata come tale nel Quadro LM (rigo LM35).
+ */
 export function calcolaRiepilogoAnno(
   anno: number,
   incassi: Incasso[],
@@ -61,8 +81,9 @@ export function calcolaRiepilogoAnno(
   const fatturatoIncassato = fatturatoIncassatoAnno(incassi, anno);
   const imponibile = calcolaImponibile(fatturatoIncassato, profilo.coefficienteRedditivita);
   const aliquotaSostitutivaApplicata = determinaAliquotaSostitutiva(profilo, aliquote);
-  const impostaSostitutiva = round2(imponibile * aliquotaSostitutivaApplicata);
   const contributiInps = round2(imponibile * aliquote.aliquotaInps);
+  const baseImponibileSostitutiva = round2(Math.max(0, imponibile - contributiInps));
+  const impostaSostitutiva = round2(baseImponibileSostitutiva * aliquotaSostitutivaApplicata);
   const totaleDovuto = round2(impostaSostitutiva + contributiInps);
   const nettoStimato = round2(fatturatoIncassato - totaleDovuto);
 

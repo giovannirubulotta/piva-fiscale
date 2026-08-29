@@ -68,20 +68,30 @@ Oppure singolarmente:
 |---|---|
 | `npm run typecheck` | Tipi, in modalità strict |
 | `npm run lint` | ESLint |
-| `npm run test` | Test del dominio fiscale (Vitest) |
+| `npm run test` | Test del dominio fiscale e validazione XSD dell'XML (Vitest) |
 | `npm run contrasto` | Contrasto WCAG 2.1 AA su tutte le combinazioni di colore |
 | `npm run build` | Build di produzione |
 | `npm run budget` | Performance budget sul peso del JavaScript |
+| `npm run e2e` | Percorsi critici su desktop e mobile (Playwright) |
 
 Tutti bloccanti, tutti in CI (`.github/workflows/verifica.yml`).
 
 ### Cosa è coperto dai test
 
-I test coprono la logica di dominio: calcolo di imposta e contributi, soglie e
-cause di esclusione dal forfettario, scadenzario, righe F24, Quadro LM, totali
-di fattura e generazione dell'XML. Non coprono ancora i flussi end-to-end
-(autenticazione, salvataggio di una fattura dall'interfaccia): è il gap noto più
-rilevante sul fronte qualità, annotato in `DECISIONS.md`.
+**Dominio** (136 test): calcolo di imposta e contributi, soglie e cause di
+esclusione dal forfettario, scadenzario, righe F24, Quadro LM, totali di fattura
+e generazione dell'XML. Sei esemplari di XML sono validati contro lo schema XSD
+ufficiale in `schema/` — struttura, ordine degli elementi, tipi e pattern; i
+limiti di quella validazione sono descritti nell'intestazione di
+`lib/domain/fatturaXml.xsd.test.ts`.
+
+**End-to-end** (46 test, desktop e mobile): perimetro di autenticazione su tutte
+le rotte, API che non devono restituire dati a un anonimo, pagina di accesso,
+accessibilità di base.
+
+Non coperti: i flussi autenticati dall'interfaccia (creare un cliente, emettere
+una fattura). Richiedono un progetto Supabase di prova separato da quello reale.
+Gap annotato in `DECISIONS.md`.
 
 ## Deployment
 
@@ -92,9 +102,15 @@ collegato, parte manualmente e non è tracciato:
 npx vercel@latest deploy --prod --token=<token>
 ```
 
-Collegare il repository a GitHub e a Vercel sostituisce questo comando con un
-deploy tracciato per commit, un ambiente di staging per ogni pull request e il
-rollback in un click — vedi `.github/workflows/README.md`.
+Per sostituirlo con un deploy tracciato per commit, un ambiente di staging per
+ogni pull request e il rollback in un click:
+
+```bash
+./scripts/collega-repo.sh
+```
+
+Crea il repository su GitHub, fa il push e collega Vercel. È l'unico passo che
+richiede le tue credenziali. Dettagli in `.github/workflows/README.md`.
 
 ### Migrazioni del database
 
@@ -115,11 +131,15 @@ sezione dedicata in `DECISIONS.md`.
 
 ## Note di sicurezza aperte
 
-- Registrazione account aperta (`supabase.auth.signUp`): per un'app a utente
-  singolo conviene disabilitare le registrazioni pubbliche dal pannello Supabase
-  (Authentication → Providers) dopo aver creato il proprio account. Anche se
-  qualcun altro si registrasse, RLS gli impedirebbe di vedere dati altrui — ma
-  resta una superficie da chiudere.
-- `fiscale_aliquote` è scrivibile da qualsiasi utente autenticato, non solo dal
-  proprietario: scelta deliberata finché "autenticato" coincide con una sola
-  persona. Se l'app diventasse multi-utente, questa policy va ristretta.
+- **Registrazione account aperta.** Chiuderla dal pannello Supabase
+  (Authentication → Providers) sarebbe la mossa giusta per un'app a utente
+  singolo, ma **il progetto Supabase è condiviso con l'applicazione "pratiche"**
+  e la registrazione è un'impostazione dell'intero progetto: disattivarla
+  toccherebbe anche quella. È una decisione che riguarda entrambe le
+  applicazioni, non solo questa, e va presa sapendolo. Nel frattempo il rischio
+  è contenuto: RLS impedisce a chiunque si registri di vedere dati altrui.
+- **`fiscale_aliquote` è scrivibile da qualsiasi utente autenticato**, non solo
+  dal proprietario: la tabella è dati di riferimento condivisi e non ha una
+  colonna `user_id`. Finché gli account autenticati sono i tuoi, la superficie
+  è teorica; diventa reale se le registrazioni restano aperte e qualcuno si
+  iscrive. Le due note vanno lette insieme.

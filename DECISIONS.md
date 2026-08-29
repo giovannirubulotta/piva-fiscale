@@ -302,3 +302,49 @@ L'audit ne ha trovate dodici. Undici sono componenti React: JSX dichiarativo, do
 4. **Ambiente di staging**: dipende dal collegamento del repository.
 5. **`generaXmlFattura` da scomporre** (sopra).
 6. **`fiscale_incassi`** da eliminare dopo verifica.
+
+## Fase 8: riduzione della lista di cose che deve fare l'utente
+
+Richiesta esplicita: fare il più possibile in autonomia e lasciare solo l'inevitabile. Tre voci erano assegnate all'utente; due sono state chiuse, una ridotta a un comando.
+
+### Validazione XSD: chiusa senza intervento dell'utente
+
+Era assegnata a lui perché le pagine dell'Agenzia rispondono 403 ai client automatici — riconfermato provando `WebFetch` sull'URL ufficiale dello schema 1.2.3. Anziché fermarsi lì, cercato lo schema sui registri di pacchetti, che sono raggiungibili: il pacchetto npm `fatturapa` contiene lo **schema XSD ufficiale, revisione 1.2.1**, ora committato in `schema/`.
+
+La 1.2.1 non basta tale e quale: **non contiene `N2.2`** — verificato, zero occorrenze — perché quel codice è stato introdotto nel 2021 quando il generico `N2` è stato suddiviso, ed è proprio il codice che un forfettario deve usare. Validare senza accorgimenti boccerebbe un file corretto.
+
+Soluzione: si rilassano **esclusivamente tre tipi enumerati** (`NaturaType`, `TipoDocumentoType`, `RegimeFiscaleType`), gli unici estesi dopo la 1.2.1, e si lascia intatto tutto il resto. Resta validato ciò che conta davvero: struttura, **ordine degli elementi** (lo scarto 00200, invisibile a occhio), obbligatorietà, tipi, pattern e lunghezze. Non resta validata l'appartenenza dei codici agli elenchi correnti, che è però già coperta dai test di dominio.
+
+Sei esemplari coprono i casi che producono XML strutturalmente diverso: senza bollo, bollo riaddebitato, bollo a carico dell'emittente, privato con PEC e più righe, nota di credito con documento collegato, causale aggiuntiva senza IBAN. Tutti conformi.
+
+Il confine è dichiarato nell'intestazione del test perché **un controllo che si spaccia per più di quello che è vale meno di nessun controllo**: genera fiducia mal riposta. Fornire la 1.2.3 scaricata da browser resta un miglioramento possibile, non più una necessità.
+
+### `fiscale_incassi` eliminata
+
+Verificato prima: 1 incasso attivo contro 1 fattura attiva, 20,00 € contro 20,00 €, zero incassi senza fattura corrispondente. Il contenuto della riga è trascritto nel commento della migrazione, così il registro resta completo anche senza la tabella.
+
+### `generaXmlFattura` scomposta
+
+Era il debito dichiarato in fase 7: 128 righe di logica imperativa in una funzione sola. Ora sei costruttori, uno per blocco dello schema, più un assemblatore di dodici righe. La ragione non è estetica: l'ordine degli elementi è vincolante e sbagliarlo produce lo scarto 00200, che non si vede rileggendo; con una sequenza unica e lunga è difficile capire dove finisce una `xs:sequence` e comincia l'altra. Ora ogni funzione corrisponde a un blocco e il confronto con le specifiche è diretto. I 37 test esistenti passano invariati.
+
+### Collegamento del repository ridotto a un comando
+
+`scripts/collega-repo.sh` crea il repository privato su GitHub, fa il push e collega Vercel. Rifiuta di partire con modifiche non committate, riconosce un remote già presente, e se `gh` non è installato spiega l'alternativa manuale invece di fallire e basta. Resta l'unico passo che richiede credenziali che un ambiente automatico non ha e non deve avere.
+
+### Registrazioni aperte: NON chiuse, deliberatamente
+
+Avevo in programma di bloccarle con un trigger su `auth.users`. Controllato prima: **il progetto ha 2 utenti ed è condiviso con l'applicazione "pratiche"**. Le registrazioni sono un'impostazione dell'intero progetto Supabase, quindi chiuderle avrebbe rotto la registrazione dell'altra applicazione — un effetto collaterale su un sistema fuori dal perimetro di questo lavoro, che non è una decisione da prendere unilateralmente.
+
+Registrato qui perché è il tipo di azione che sembra un miglioramento finché non si guarda cosa c'è intorno. La nota di sicurezza nel README è stata riscritta di conseguenza, legandola a quella su `fiscale_aliquote`: le due condividono la stessa premessa.
+
+### Cosa resta all'utente, e perché è irriducibile
+
+1. **Eseguire `./scripts/collega-repo.sh`** — creare un repository sul suo account GitHub richiede le sue credenziali.
+2. **Ruotare il token Vercel** — è stato usato in chiaro nei comandi di questa sessione. Solo lui può revocarlo dal proprio account.
+3. **Decidere sulle registrazioni aperte** — sopra: coinvolge l'altra applicazione.
+
+### Gap ancora aperti
+
+1. **Flussi autenticati non coperti dagli E2E**: serve un progetto Supabase di prova. Crearne uno ha un costo e tocca il suo account.
+2. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
+3. **Ambiente di staging**: si attiva con il punto 1 della lista sopra.

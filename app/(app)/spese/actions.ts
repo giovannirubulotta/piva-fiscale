@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { richiediUtente } from "@/lib/auth";
+import { registraErrore } from "@/lib/osservabilita/log";
 import { creaSpesa, eliminaSpesa } from "@/lib/data/spese";
 
 export interface EsitoForm {
@@ -29,7 +30,12 @@ export async function aggiungiSpesa(_prev: EsitoForm, formData: FormData): Promi
       categoria: String(formData.get("categoria") ?? "") || null,
       importo,
     });
-  } catch {
+  } catch (causa) {
+    await registraErrore(supabase, user.id, {
+      contesto: "spese.aggiungiSpesa",
+      messaggio: "Registrazione spesa non riuscita.",
+      causa,
+    });
     return { ...statoVuoto, errore: "Salvataggio non riuscito. Riprova." };
   }
 

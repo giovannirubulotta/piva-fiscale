@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# materiale di lavoro non di progetto (mappe, bozze)
+/scratch

@@ -1,10 +1,11 @@
 import { richiediUtente } from "@/lib/auth";
 import { leggiProfilo } from "@/lib/data/profilo";
 import { leggiAliquote } from "@/lib/data/aliquote";
-import { leggiIncassi } from "@/lib/data/incassi";
+import { leggiIncassiDaFatture } from "@/lib/data/fatture";
 import { leggiStatiScadenze } from "@/lib/data/scadenzeStato";
 import { riepiloghiAnniChiusi } from "@/lib/domain/orchestrazione";
 import { generaScadenzeAnnuali, generaScadenzeBollo } from "@/lib/domain/scadenzario";
+import Link from "next/link";
 import { formattaEuro, formattaData, giorniMancanti } from "@/lib/ui/format";
 import { segnaPagata, segnaNonPagata } from "./actions";
 
@@ -18,7 +19,7 @@ export default async function PaginaScadenze() {
 
   const [tutteLeAliquote, incassi, statiScadenze] = await Promise.all([
     leggiAliquote(supabase),
-    leggiIncassi(supabase, user.id),
+    leggiIncassiDaFatture(supabase, user.id),
     leggiStatiScadenze(supabase, user.id),
   ]);
 
@@ -44,17 +45,25 @@ export default async function PaginaScadenze() {
         descrizione: s.descrizione,
         data: s.dataScadenza,
         importo: s.importoDovuto,
-        codiceTributo: "bollo virtuale",
+        codiceTributo: s.codiceTributo,
       })),
   ].sort((a, b) => a.data.localeCompare(b.data));
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold mb-1">Scadenze</h1>
-        <p className="text-sm text-ink-muted">
-          Calcolate a partire dai riepiloghi degli anni chiusi. Segna una voce come pagata dopo aver versato l&apos;F24.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold mb-1">Scadenze</h1>
+          <p className="text-sm text-ink-muted">
+            Calcolate a partire dai riepiloghi degli anni chiusi. Segna una voce come pagata dopo aver versato l&apos;F24.
+          </p>
+        </div>
+        <Link
+          href="/f24"
+          className="shrink-0 rounded-lg border border-line px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
+        >
+          Genera F24 →
+        </Link>
       </div>
 
       {righe.length === 0 ? (
@@ -62,8 +71,8 @@ export default async function PaginaScadenze() {
           Nessuna scadenza ancora: il primo anno di attività non genera versamenti.
         </p>
       ) : (
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-xl border border-line bg-surface overflow-x-auto">
+          <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr className="text-left text-xs text-ink-muted uppercase tracking-wide border-b border-line">
                 <th className="px-4 py-3 font-medium">Scadenza</th>

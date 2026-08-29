@@ -21,8 +21,8 @@ export default async function PaginaSpese() {
 
       <NuovaSpesaForm />
 
-      <div className="rounded-xl border border-line bg-surface overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-xl border border-line bg-surface overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-muted uppercase tracking-wide border-b border-line">
               <th className="px-4 py-3 font-medium">Data</th>

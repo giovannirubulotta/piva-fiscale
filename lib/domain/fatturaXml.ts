@@ -280,48 +280,59 @@ export function nomeFileXml(codiceFiscaleEmittente: string, progressivo: string)
  * errori: qui non si rivalida, si costruisce — separare le due cose evita che
  * un controllo silenzioso produca un file "quasi giusto" senza avvisare.
  */
-export function generaXmlFattura(contesto: ContestoFattura): string {
-  const { fattura, cliente, emittente } = contesto;
-  const righe = righeConBollo(fattura);
-  const imponibile = totaleRighe(righe);
-  const totale = totaleDocumento(fattura);
-  const progressivoInvio = fattura.xmlProgressivo ?? "00001";
+/* ------------------------------------------------------------------ */
+/* Costruttori dei blocchi                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * I quattro blocchi dell'XML sono costruiti da funzioni separate perché
+ * l'ordine degli elementi è vincolante e sbagliarlo produce lo scarto 00200,
+ * che è invisibile a occhio: una sequenza sola e lunga rende difficile vedere
+ * dove finisce una `xs:sequence` e comincia l'altra. Ogni funzione qui
+ * corrisponde a un blocco dello schema, così il confronto con le specifiche è
+ * diretto.
+ */
+
+function bloccoDatiTrasmissione(cliente: Cliente, emittente: DatiEmittente, progressivoInvio: string): string[] {
   const codiceDestinatario = cliente.codiceDestinatario.toUpperCase();
-
-  const out: string[] = [];
-  out.push('<?xml version="1.0" encoding="UTF-8"?>');
-  out.push(`<p:FatturaElettronica versione="${FORMATO_TRASMISSIONE}" xmlns:p="${NAMESPACE_FATTURAPA}">`);
-
-  // --- Header ---
-  out.push("  <FatturaElettronicaHeader>");
-  out.push("    <DatiTrasmissione>");
-  out.push("      <IdTrasmittente>");
-  out.push(tag("IdPaese", "IT", 4));
-  out.push(tag("IdCodice", (emittente.codiceFiscale ?? "").trim().toUpperCase(), 4));
-  out.push("      </IdTrasmittente>");
-  out.push(tag("ProgressivoInvio", progressivoInvio, 3));
-  out.push(tag("FormatoTrasmissione", FORMATO_TRASMISSIONE, 3));
-  out.push(tag("CodiceDestinatario", codiceDestinatario, 3));
+  const out = [
+    "    <DatiTrasmissione>",
+    "      <IdTrasmittente>",
+    tag("IdPaese", "IT", 4),
+    tag("IdCodice", (emittente.codiceFiscale ?? "").trim().toUpperCase(), 4),
+    "      </IdTrasmittente>",
+    tag("ProgressivoInvio", progressivoInvio, 3),
+    tag("FormatoTrasmissione", FORMATO_TRASMISSIONE, 3),
+    tag("CodiceDestinatario", codiceDestinatario, 3),
+  ];
+  // La PEC ha effetto solo con codice destinatario 0000000: indicarla altrove
+  // non è un'alternativa, è un errore.
   if (codiceDestinatario === "0000000" && !vuoto(cliente.pecDestinatario)) {
     out.push(tag("PECDestinatario", cliente.pecDestinatario!.trim(), 3));
   }
   out.push("    </DatiTrasmissione>");
+  return out;
+}
 
-  out.push("    <CedentePrestatore>");
-  out.push("      <DatiAnagrafici>");
-  out.push("        <IdFiscaleIVA>");
-  out.push(tag("IdPaese", "IT", 5));
-  out.push(tag("IdCodice", (emittente.partitaIva ?? "").trim(), 5));
-  out.push("        </IdFiscaleIVA>");
-  out.push(tag("CodiceFiscale", (emittente.codiceFiscale ?? "").trim().toUpperCase(), 4));
-  out.push(...nomeCompleto(4, null, emittente.nome, emittente.cognome));
-  out.push(tag("RegimeFiscale", REGIME_FISCALE, 4));
-  out.push("      </DatiAnagrafici>");
-  out.push(...sede(3, emittente));
-  out.push("    </CedentePrestatore>");
+function bloccoCedentePrestatore(emittente: DatiEmittente): string[] {
+  return [
+    "    <CedentePrestatore>",
+    "      <DatiAnagrafici>",
+    "        <IdFiscaleIVA>",
+    tag("IdPaese", "IT", 5),
+    tag("IdCodice", (emittente.partitaIva ?? "").trim(), 5),
+    "        </IdFiscaleIVA>",
+    tag("CodiceFiscale", (emittente.codiceFiscale ?? "").trim().toUpperCase(), 4),
+    ...nomeCompleto(4, null, emittente.nome, emittente.cognome),
+    tag("RegimeFiscale", REGIME_FISCALE, 4),
+    "      </DatiAnagrafici>",
+    ...sede(3, emittente),
+    "    </CedentePrestatore>",
+  ];
+}
 
-  out.push("    <CessionarioCommittente>");
-  out.push("      <DatiAnagrafici>");
+function bloccoCessionarioCommittente(cliente: Cliente): string[] {
+  const out = ["    <CessionarioCommittente>", "      <DatiAnagrafici>"];
   if (!vuoto(cliente.partitaIva)) {
     out.push("        <IdFiscaleIVA>");
     out.push(tag("IdPaese", cliente.idPaese.trim().toUpperCase(), 5));
@@ -335,16 +346,22 @@ export function generaXmlFattura(contesto: ContestoFattura): string {
   out.push("      </DatiAnagrafici>");
   out.push(...sede(3, cliente));
   out.push("    </CessionarioCommittente>");
-  out.push("  </FatturaElettronicaHeader>");
+  return out;
+}
 
-  // --- Body ---
-  out.push("  <FatturaElettronicaBody>");
-  out.push("    <DatiGenerali>");
-  out.push("      <DatiGeneraliDocumento>");
-  out.push(tag("TipoDocumento", fattura.tipoDocumento, 4));
-  out.push(tag("Divisa", "EUR", 4));
-  out.push(tag("Data", fattura.dataEmissione, 4));
-  out.push(tag("Numero", numeroFattura(fattura), 4));
+function bloccoDatiGenerali(contesto: ContestoFattura, totale: number): string[] {
+  const { fattura } = contesto;
+  const out = [
+    "    <DatiGenerali>",
+    "      <DatiGeneraliDocumento>",
+    tag("TipoDocumento", fattura.tipoDocumento, 4),
+    tag("Divisa", "EUR", 4),
+    tag("Data", fattura.dataEmissione, 4),
+    tag("Numero", numeroFattura(fattura), 4),
+  ];
+  // DatiBollo sta fra Numero e ImportoTotaleDocumento: sesta posizione della
+  // sequenza, dopo DatiRitenuta e prima di DatiCassaPrevidenziale, entrambi
+  // assenti per un forfettario senza cassa.
   if (fattura.bolloApplicato) {
     out.push("        <DatiBollo>");
     out.push(tag("BolloVirtuale", "SI", 5));
@@ -352,9 +369,7 @@ export function generaXmlFattura(contesto: ContestoFattura): string {
     out.push("        </DatiBollo>");
   }
   out.push(tag("ImportoTotaleDocumento", importo(totale), 4));
-  for (const causale of CAUSALI_FORFETTARIO) {
-    out.push(tag("Causale", causale, 4));
-  }
+  for (const causale of CAUSALI_FORFETTARIO) out.push(tag("Causale", causale, 4));
   if (!vuoto(fattura.causaleAggiuntiva)) {
     out.push(tag("Causale", fattura.causaleAggiuntiva!.trim().slice(0, 200), 4));
   }
@@ -367,8 +382,12 @@ export function generaXmlFattura(contesto: ContestoFattura): string {
     out.push("      </DatiFattureCollegate>");
   }
   out.push("    </DatiGenerali>");
+  return out;
+}
 
-  out.push("    <DatiBeniServizi>");
+function bloccoDatiBeniServizi(righe: ReturnType<typeof righeConBollo>, imponibile: number): string[] {
+  const out = ["    <DatiBeniServizi>"];
+
   for (const riga of righe) {
     out.push("      <DettaglioLinee>");
     out.push(tag("NumeroLinea", riga.numeroLinea, 4));
@@ -377,13 +396,14 @@ export function generaXmlFattura(contesto: ContestoFattura): string {
     if (!vuoto(riga.unitaMisura)) out.push(tag("UnitaMisura", riga.unitaMisura!.trim(), 4));
     out.push(tag("PrezzoUnitario", importo(riga.prezzoUnitario), 4));
     out.push(tag("PrezzoTotale", importo(totaleRiga(riga)), 4));
-    // AliquotaIVA e Natura: l'ordine è vincolante, Natura viene dopo (scarto 00200).
+    // Natura viene dopo AliquotaIVA: l'ordine è vincolante (scarto 00200).
     out.push(tag("AliquotaIVA", importo(0), 4));
     out.push(tag("Natura", NATURA_FORFETTARIO, 4));
     out.push("      </DettaglioLinee>");
   }
-  // Un solo riepilogo: tutte le righe di un forfettario hanno la stessa coppia
-  // (AliquotaIVA 0.00, Natura N2.2), quindi aggregano in un blocco solo.
+
+  // Un solo riepilogo: tutte le righe di un forfettario condividono la coppia
+  // (AliquotaIVA 0.00, Natura N2.2) e aggregano quindi in un blocco unico.
   out.push("      <DatiRiepilogo>");
   out.push(tag("AliquotaIVA", importo(0), 4));
   out.push(tag("Natura", NATURA_FORFETTARIO, 4));
@@ -392,20 +412,49 @@ export function generaXmlFattura(contesto: ContestoFattura): string {
   out.push(tag("RiferimentoNormativo", RIFERIMENTO_NORMATIVO, 4));
   out.push("      </DatiRiepilogo>");
   out.push("    </DatiBeniServizi>");
+  return out;
+}
 
-  out.push("    <DatiPagamento>");
-  out.push(tag("CondizioniPagamento", fattura.condizioniPagamento, 3));
-  out.push("      <DettaglioPagamento>");
-  out.push(tag("ModalitaPagamento", fattura.modalitaPagamento, 4));
-  out.push(tag("DataScadenzaPagamento", dataScadenzaPagamento(fattura), 4));
-  out.push(tag("ImportoPagamento", importo(totale), 4));
+function bloccoDatiPagamento(fattura: Fattura, emittente: DatiEmittente, totale: number): string[] {
+  const out = [
+    "    <DatiPagamento>",
+    tag("CondizioniPagamento", fattura.condizioniPagamento, 3),
+    "      <DettaglioPagamento>",
+    tag("ModalitaPagamento", fattura.modalitaPagamento, 4),
+    tag("DataScadenzaPagamento", dataScadenzaPagamento(fattura), 4),
+    tag("ImportoPagamento", importo(totale), 4),
+  ];
   if (!vuoto(emittente.iban)) {
     out.push(tag("IBAN", emittente.iban!.replace(/\s/g, "").toUpperCase(), 4));
   }
-  out.push("      </DettaglioPagamento>");
-  out.push("    </DatiPagamento>");
-  out.push("  </FatturaElettronicaBody>");
-  out.push("</p:FatturaElettronica>");
+  out.push("      </DettaglioPagamento>", "    </DatiPagamento>");
+  return out;
+}
 
-  return out.join("\n");
+/**
+ * Genera l'XML. Presuppone che `validaFatturaPerXml` non abbia restituito
+ * errori: qui non si rivalida, si costruisce — separare le due cose evita che
+ * un controllo silenzioso produca un file "quasi giusto" senza avvisare.
+ */
+export function generaXmlFattura(contesto: ContestoFattura): string {
+  const { fattura, cliente, emittente } = contesto;
+  const righe = righeConBollo(fattura);
+  const imponibile = totaleRighe(righe);
+  const totale = totaleDocumento(fattura);
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<p:FatturaElettronica versione="${FORMATO_TRASMISSIONE}" xmlns:p="${NAMESPACE_FATTURAPA}">`,
+    "  <FatturaElettronicaHeader>",
+    ...bloccoDatiTrasmissione(cliente, emittente, fattura.xmlProgressivo ?? "00001"),
+    ...bloccoCedentePrestatore(emittente),
+    ...bloccoCessionarioCommittente(cliente),
+    "  </FatturaElettronicaHeader>",
+    "  <FatturaElettronicaBody>",
+    ...bloccoDatiGenerali(contesto, totale),
+    ...bloccoDatiBeniServizi(righe, imponibile),
+    ...bloccoDatiPagamento(fattura, emittente, totale),
+    "  </FatturaElettronicaBody>",
+    "</p:FatturaElettronica>",
+  ].join("\n");
 }

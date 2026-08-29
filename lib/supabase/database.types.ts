@@ -221,54 +221,6 @@ export type Database = {
         }
         Relationships: []
       }
-      fiscale_incassi: {
-        Row: {
-          bollo_applicato: boolean
-          cliente: string
-          created_at: string
-          data_emissione: string
-          data_incasso: string | null
-          descrizione: string | null
-          id: string
-          importo_netto: number
-          note: string | null
-          numero_fattura: string | null
-          stato: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bollo_applicato?: boolean
-          cliente: string
-          created_at?: string
-          data_emissione: string
-          data_incasso?: string | null
-          descrizione?: string | null
-          id?: string
-          importo_netto: number
-          note?: string | null
-          numero_fattura?: string | null
-          stato?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bollo_applicato?: boolean
-          cliente?: string
-          created_at?: string
-          data_emissione?: string
-          data_incasso?: string | null
-          descrizione?: string | null
-          id?: string
-          importo_netto?: number
-          note?: string | null
-          numero_fattura?: string | null
-          stato?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       fiscale_log_errori: {
         Row: {
           created_at: string

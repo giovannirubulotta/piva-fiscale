@@ -20,8 +20,12 @@ export async function createClient() {
               cookieStore.set(name, value, options);
             }
           } catch {
-            // setAll chiamato da un Server Component: ignorabile se c'è il middleware
-            // a rinfrescare la sessione ad ogni richiesta.
+            // Unico catch vuoto ammesso nel progetto, e per una ragione precisa:
+            // Next.js vieta di scrivere cookie da un Server Component, quindi
+            // setAll lancia in quel contesto. Non è un guasto da registrare —
+            // è il flusso normale, e il middleware rinfresca comunque la
+            // sessione a ogni richiesta. Registrarlo riempirebbe il log di
+            // rumore nascondendo gli errori veri.
           }
         },
       },

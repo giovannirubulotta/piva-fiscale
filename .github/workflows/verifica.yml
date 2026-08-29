@@ -57,3 +57,26 @@ jobs:
 
       - name: Performance budget
         run: npm run budget
+
+      # I browser di Playwright pesano centinaia di MB: si scaricano solo qui,
+      # dopo che tutto il resto è passato, e solo Chromium con le sue dipendenze
+      # di sistema. Un E2E rosso a valle di un typecheck rosso non aggiunge
+      # informazione, ma costa minuti di pipeline.
+      - name: Installa Chromium per i test end-to-end
+        run: npx playwright install --with-deps chromium
+
+      - name: Test end-to-end (percorsi critici)
+        run: npm run e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://esempio.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: chiave-finta-per-la-build
+
+      # Trace e screenshot dei fallimenti: senza, un test rosso in CI e verde in
+      # locale è una caccia al fantasma.
+      - name: Conserva il referto dei test falliti
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -42,3 +42,8 @@ next-env.d.ts
 
 # materiale di lavoro non di progetto (mappe, bozze)
 /scratch
+
+# playwright
+/test-results
+/playwright-report
+/blob-report

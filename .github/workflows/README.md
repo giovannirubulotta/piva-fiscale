@@ -31,3 +31,23 @@ tre cose che oggi mancano:
 
 Le variabili d'ambiente reali (`NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`) vanno impostate in Vercel, mai committate.
+
+## Branch e rilasci
+
+Lo standard vieta modifiche dirette su `main` in un progetto in produzione. Una
+volta collegato il remote:
+
+```bash
+git switch -c feat/nome-funzionalita   # oppure fix/, refactor/, docs/
+# ... lavoro, commit in Conventional Commits ...
+git push -u origin feat/nome-funzionalita
+# pull request: la CI gira e Vercel crea il preview deployment
+```
+
+Il merge su `main` fa il deploy in produzione. I commit fatti finora sono su
+`main` perché il repository era locale e senza remote: da qui in avanti si passa
+dai branch.
+
+Il numero di versione in `package.json` e `CHANGELOG.md` si alza al merge:
+**MAJOR** quando cambia il calcolo delle imposte o il formato dei documenti
+trasmessi, **MINOR** per nuove funzionalità, **PATCH** per correzioni.

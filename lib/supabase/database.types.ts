@@ -12,7 +12,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -149,6 +149,78 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscale_coefficienti_ateco: {
+        Row: {
+          coefficiente: number
+          gruppo: number
+          id: number
+          prefisso_ateco: string
+          riferimento_normativo: string
+          settore: string
+          updated_at: string
+        }
+        Insert: {
+          coefficiente: number
+          gruppo: number
+          id?: never
+          prefisso_ateco: string
+          riferimento_normativo?: string
+          settore: string
+          updated_at?: string
+        }
+        Update: {
+          coefficiente?: number
+          gruppo?: number
+          id?: never
+          prefisso_ateco?: string
+          riferimento_normativo?: string
+          settore?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fiscale_crediti_disponibili: {
+        Row: {
+          anno_maturazione: number
+          anno_utilizzo: number | null
+          created_at: string
+          data_utilizzo: string | null
+          id: string
+          importo: number
+          note: string | null
+          tipologia: string
+          updated_at: string
+          user_id: string
+          utilizzato: boolean
+        }
+        Insert: {
+          anno_maturazione: number
+          anno_utilizzo?: number | null
+          created_at?: string
+          data_utilizzo?: string | null
+          id?: string
+          importo: number
+          note?: string | null
+          tipologia: string
+          updated_at?: string
+          user_id: string
+          utilizzato?: boolean
+        }
+        Update: {
+          anno_maturazione?: number
+          anno_utilizzo?: number | null
+          created_at?: string
+          data_utilizzo?: string | null
+          id?: string
+          importo?: number
+          note?: string | null
+          tipologia?: string
+          updated_at?: string
+          user_id?: string
+          utilizzato?: boolean
+        }
+        Relationships: []
+      }
       fiscale_incassi: {
         Row: {
           bollo_applicato: boolean
@@ -197,40 +269,431 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscale_log_errori: {
+        Row: {
+          created_at: string
+          contesto: string
+          dettaglio: string | null
+          id: string
+          messaggio: string
+          severita: string
+          stack: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          contesto: string
+          dettaglio?: string | null
+          id?: string
+          messaggio: string
+          severita?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          contesto?: string
+          dettaglio?: string | null
+          id?: string
+          messaggio?: string
+          severita?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      fiscale_lavoro_dipendente: {
+        Row: {
+          addizionale_comunale: number
+          addizionale_regionale: number
+          anno: number
+          created_at: string
+          datore_lavoro: string | null
+          id: string
+          note: string | null
+          reddito_imponibile: number
+          ritenute_irpef: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          addizionale_comunale?: number
+          addizionale_regionale?: number
+          anno: number
+          created_at?: string
+          datore_lavoro?: string | null
+          id?: string
+          note?: string | null
+          reddito_imponibile: number
+          ritenute_irpef?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          addizionale_comunale?: number
+          addizionale_regionale?: number
+          anno?: number
+          created_at?: string
+          datore_lavoro?: string | null
+          id?: string
+          note?: string | null
+          reddito_imponibile?: number
+          ritenute_irpef?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fiscale_clienti: {
+        Row: {
+          cap: string | null
+          codice_destinatario: string
+          codice_fiscale: string | null
+          cognome: string | null
+          comune: string | null
+          created_at: string
+          denominazione: string | null
+          email: string | null
+          id: string
+          id_paese: string
+          indirizzo: string | null
+          nazione: string
+          nome: string | null
+          note: string | null
+          numero_civico: string | null
+          partita_iva: string | null
+          pec_destinatario: string | null
+          provincia: string | null
+          telefono: string | null
+          tipologia: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cap?: string | null
+          codice_destinatario?: string
+          codice_fiscale?: string | null
+          cognome?: string | null
+          comune?: string | null
+          created_at?: string
+          denominazione?: string | null
+          email?: string | null
+          id?: string
+          id_paese?: string
+          indirizzo?: string | null
+          nazione?: string
+          nome?: string | null
+          note?: string | null
+          numero_civico?: string | null
+          partita_iva?: string | null
+          pec_destinatario?: string | null
+          provincia?: string | null
+          telefono?: string | null
+          tipologia: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cap?: string | null
+          codice_destinatario?: string
+          codice_fiscale?: string | null
+          cognome?: string | null
+          comune?: string | null
+          created_at?: string
+          denominazione?: string | null
+          email?: string | null
+          id?: string
+          id_paese?: string
+          indirizzo?: string | null
+          nazione?: string
+          nome?: string | null
+          note?: string | null
+          numero_civico?: string | null
+          partita_iva?: string | null
+          pec_destinatario?: string | null
+          provincia?: string | null
+          telefono?: string | null
+          tipologia?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fiscale_fattura_righe: {
+        Row: {
+          created_at: string
+          descrizione: string
+          fattura_id: string
+          id: string
+          numero_linea: number
+          prezzo_unitario: number
+          quantita: number
+          unita_misura: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descrizione: string
+          fattura_id: string
+          id?: string
+          numero_linea: number
+          prezzo_unitario: number
+          quantita?: number
+          unita_misura?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descrizione?: string
+          fattura_id?: string
+          id?: string
+          numero_linea?: number
+          prezzo_unitario?: number
+          quantita?: number
+          unita_misura?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_fattura_righe_fattura_id_fkey"
+            columns: ["fattura_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscale_fatture: {
+        Row: {
+          anno: number
+          bollo_applicato: boolean
+          bollo_riaddebitato: boolean
+          causale_aggiuntiva: string | null
+          cliente_id: string
+          condizioni_pagamento: string
+          created_at: string
+          data_emissione: string
+          data_incasso: string | null
+          fattura_riferimento_id: string | null
+          giorni_scadenza_pagamento: number
+          id: string
+          modalita_pagamento: string
+          note: string | null
+          progressivo: number
+          stato: string
+          tipo_documento: string
+          updated_at: string
+          user_id: string
+          xml_generato_il: string | null
+          xml_progressivo: string | null
+        }
+        Insert: {
+          anno: number
+          bollo_applicato?: boolean
+          bollo_riaddebitato?: boolean
+          causale_aggiuntiva?: string | null
+          cliente_id: string
+          condizioni_pagamento?: string
+          created_at?: string
+          data_emissione: string
+          data_incasso?: string | null
+          fattura_riferimento_id?: string | null
+          giorni_scadenza_pagamento?: number
+          id?: string
+          modalita_pagamento?: string
+          note?: string | null
+          progressivo: number
+          stato?: string
+          tipo_documento?: string
+          updated_at?: string
+          user_id: string
+          xml_generato_il?: string | null
+          xml_progressivo?: string | null
+        }
+        Update: {
+          anno?: number
+          bollo_applicato?: boolean
+          bollo_riaddebitato?: boolean
+          causale_aggiuntiva?: string | null
+          cliente_id?: string
+          condizioni_pagamento?: string
+          created_at?: string
+          data_emissione?: string
+          data_incasso?: string | null
+          fattura_riferimento_id?: string | null
+          giorni_scadenza_pagamento?: number
+          id?: string
+          modalita_pagamento?: string
+          note?: string | null
+          progressivo?: number
+          stato?: string
+          tipo_documento?: string
+          updated_at?: string
+          user_id?: string
+          xml_generato_il?: string | null
+          xml_progressivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_fatture_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_fatture_fattura_riferimento_id_fkey"
+            columns: ["fattura_riferimento_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscale_progressivi_xml: {
+        Row: {
+          created_at: string
+          fattura_id: string | null
+          id: string
+          progressivo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fattura_id?: string | null
+          id?: string
+          progressivo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fattura_id?: string | null
+          id?: string
+          progressivo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_progressivi_xml_fattura_id_fkey"
+            columns: ["fattura_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscale_profilo: {
         Row: {
           agevolazione_5_percento: boolean | null
+          bollo_riaddebitato: boolean
+          cap: string | null
           codice_ateco: string
+          codice_fiscale: string | null
           coefficiente_redditivita: number
+          cognome: string | null
+          comune: string | null
           created_at: string
           data_apertura: string | null
+          email: string | null
+          iban: string | null
+          indirizzo: string | null
+          nazione: string
+          nome: string | null
           note: string | null
+          numero_civico: string | null
           partita_iva: string | null
+          provincia: string | null
           regime: string
+          telefono: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           agevolazione_5_percento?: boolean | null
+          bollo_riaddebitato?: boolean
+          cap?: string | null
           codice_ateco?: string
+          codice_fiscale?: string | null
           coefficiente_redditivita?: number
+          cognome?: string | null
+          comune?: string | null
           created_at?: string
           data_apertura?: string | null
+          email?: string | null
+          iban?: string | null
+          indirizzo?: string | null
+          nazione?: string
+          nome?: string | null
           note?: string | null
+          numero_civico?: string | null
           partita_iva?: string | null
+          provincia?: string | null
           regime?: string
+          telefono?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           agevolazione_5_percento?: boolean | null
+          bollo_riaddebitato?: boolean
+          cap?: string | null
           codice_ateco?: string
+          codice_fiscale?: string | null
           coefficiente_redditivita?: number
+          cognome?: string | null
+          comune?: string | null
           created_at?: string
           data_apertura?: string | null
+          email?: string | null
+          iban?: string | null
+          indirizzo?: string | null
+          nazione?: string
+          nome?: string | null
           note?: string | null
+          numero_civico?: string | null
           partita_iva?: string | null
+          provincia?: string | null
           regime?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fiscale_requisiti_forfettario: {
+        Row: {
+          anno: number
+          committente_prevalente_ex_datore: boolean | null
+          created_at: string
+          id: string
+          note: string | null
+          partecipazioni_societa_riconducibili: boolean | null
+          reddito_lavoro_dipendente_oltre_soglia: boolean | null
+          residenza_fuori_ue_see: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anno: number
+          committente_prevalente_ex_datore?: boolean | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          partecipazioni_societa_riconducibili?: boolean | null
+          reddito_lavoro_dipendente_oltre_soglia?: boolean | null
+          residenza_fuori_ue_see?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anno?: number
+          committente_prevalente_ex_datore?: boolean | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          partecipazioni_societa_riconducibili?: boolean | null
+          reddito_lavoro_dipendente_oltre_soglia?: boolean | null
+          residenza_fuori_ue_see?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -800,9 +1263,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

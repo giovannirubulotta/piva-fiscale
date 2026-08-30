@@ -45,10 +45,12 @@ jobs:
       # ubuntu-latest c'è già, ma installarlo esplicitamente evita che il test
       # si salti in silenzio se un giorno l'immagine cambia: un controllo
       # saltato senza accorgersene è peggio di un controllo assente.
-      - name: Assicura xmllint per la validazione XSD
+      - name: Assicura xmllint e unzip per i test che leggono i formati
         run: |
           command -v xmllint >/dev/null 2>&1 || sudo apt-get install -y --no-install-recommends libxml2-utils
+          command -v unzip >/dev/null 2>&1 || sudo apt-get install -y --no-install-recommends unzip
           xmllint --version
+          unzip -v | head -1
 
       - name: Test
         run: npm run test

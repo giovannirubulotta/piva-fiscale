@@ -20,6 +20,7 @@ import { valutaRequisitiForfettario, valutaSoglieForfettario } from "@/lib/domai
 import type { EsitoRequisito } from "@/lib/domain/types";
 import { formattaEuro, formattaData, giorniMancanti } from "@/lib/ui/format";
 import { nomeCliente } from "@/lib/domain/cliente";
+import { IntestazionePagina, Metrica, TitoloSezione, Vuoto } from "@/components/Pagina";
 
 export default async function Dashboard() {
   const { supabase, user } = await richiediUtente();
@@ -99,16 +100,16 @@ export default async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold">Anno {annoCorrente}</h1>
-        <p className="text-sm text-ink-muted mt-1">
-          {profilo.agevolazione5Percento === null
+      <IntestazionePagina
+        titolo={`Anno ${annoCorrente}`}
+        descrizione={
+          profilo.agevolazione5Percento === null
             ? "Aliquota 15% applicata per prudenza — il diritto al 5% non è ancora stato verificato."
             : profilo.agevolazione5Percento
               ? "Aliquota agevolata 5% confermata."
-              : "Aliquota standard 15%."}
-        </p>
-      </div>
+              : "Aliquota standard 15%."
+        }
+      />
 
       {scadenzeInRitardo.length > 0 && (
         <div className="rounded-xl border border-danger/40 bg-danger/10 px-5 py-4">
@@ -149,19 +150,19 @@ export default async function Dashboard() {
       <PrevisioneAnno previsione={previsione} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Riquadro etichetta="Fatturato incassato YTD" valore={formattaEuro(riepilogoCorrente.fatturatoIncassato)} />
-        <Riquadro etichetta="Imponibile stimato" valore={formattaEuro(riepilogoCorrente.imponibile)} />
-        <Riquadro
+        <Metrica etichetta="Fatturato incassato YTD" valore={formattaEuro(riepilogoCorrente.fatturatoIncassato)} />
+        <Metrica etichetta="Imponibile stimato" valore={formattaEuro(riepilogoCorrente.imponibile)} />
+        <Metrica
           etichetta={`Imposta sostitutiva (${(riepilogoCorrente.aliquotaSostitutivaApplicata * 100).toFixed(0)}%)`}
           valore={formattaEuro(riepilogoCorrente.impostaSostitutiva)}
         />
-        <Riquadro etichetta="Contributi INPS stimati" valore={formattaEuro(riepilogoCorrente.contributiInps)} />
-        <Riquadro etichetta="Totale da accantonare" valore={formattaEuro(riepilogoCorrente.totaleDovuto)} accento />
-        <Riquadro etichetta="Netto stimato in tasca" valore={formattaEuro(riepilogoCorrente.nettoStimato)} />
+        <Metrica etichetta="Contributi INPS stimati" valore={formattaEuro(riepilogoCorrente.contributiInps)} />
+        <Metrica etichetta="Totale da accantonare" valore={formattaEuro(riepilogoCorrente.totaleDovuto)} accento />
+        <Metrica etichetta="Netto stimato in tasca" valore={formattaEuro(riepilogoCorrente.nettoStimato)} />
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-line bg-surface p-5">
+        <div className="scheda p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wide mb-2">Prossima scadenza</div>
           {prossimaScadenza ? (
             <>
@@ -187,7 +188,7 @@ export default async function Dashboard() {
           </Link>
         </div>
 
-        <div className="rounded-xl border border-line bg-surface p-5">
+        <div className="scheda p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wide mb-2">Bollo virtuale da versare</div>
           <div className="text-lg font-medium">{formattaEuro(bolloDaVersare)}</div>
           <p className="text-sm text-ink-muted mt-1">
@@ -195,7 +196,7 @@ export default async function Dashboard() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-line bg-surface p-5">
+        <div className="scheda p-5">
           <div className="text-xs text-ink-muted uppercase tracking-wide mb-2">Requisiti regime forfettario</div>
           <div className={`text-lg font-medium ${TESTO_ESITO[esitoRequisiti.esitoGlobale]}`}>
             {TITOLO_ESITO[esitoRequisiti.esitoGlobale]}
@@ -208,21 +209,18 @@ export default async function Dashboard() {
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide">Fatture da incassare</h2>
-          <Link href="/fatture" className="text-sm text-accent hover:underline">
-            Tutte le fatture →
-          </Link>
-        </div>
+        <TitoloSezione collegamento={{ href: "/fatture", testo: "Tutte le fatture" }}>
+          Fatture da incassare
+        </TitoloSezione>
         {posizioni.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface px-5 py-6 text-center">
-            <p className="text-sm text-ink-muted mb-3">Nessuna fattura in attesa di incasso.</p>
-            <Link href="/fatture/nuova" className="text-sm text-accent hover:underline">
-              Emetti una fattura →
-            </Link>
+          <div className="scheda">
+            <Vuoto
+              messaggio="Nessuna fattura in attesa di incasso."
+              azione={{ href: "/fatture/nuova", testo: "Emetti una fattura" }}
+            />
           </div>
         ) : (
-          <div className="rounded-xl border border-line bg-surface overflow-hidden">
+          <div className="scheda overflow-hidden">
             <div
               className={`px-4 sm:px-5 py-3 border-b border-line text-sm ${
                 scaduto > 0 ? "bg-danger/10 text-danger" : "bg-accent-soft/40 text-accent"
@@ -250,7 +248,7 @@ export default async function Dashboard() {
               {posizioni.slice(0, 5).map(({ fattura, stato, giorniDiRitardo, dataScadenza, importo }) => (
                 <div
                   key={fattura.id}
-                  className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm"
+                  className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm riga-interattiva"
                 >
                   <Link href={`/fatture/${fattura.id}`} className="min-w-0 flex-1 hover:text-accent transition">
                     <div className="font-medium truncate">{nomiClienti.get(fattura.clienteId) ?? "—"}</div>
@@ -295,12 +293,4 @@ const TESTO_ESITO: Record<EsitoRequisito, string> = {
   escluso: "text-danger",
 };
 
-function Riquadro({ etichetta, valore, accento }: { etichetta: string; valore: string; accento?: boolean }) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="text-xs text-ink-muted mb-1.5">{etichetta}</div>
-      <div className={`text-lg font-semibold ${accento ? "text-accent" : "text-ink"}`}>{valore}</div>
-    </div>
-  );
-}
 

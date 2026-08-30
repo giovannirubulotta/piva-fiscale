@@ -52,6 +52,44 @@ body {
   color: var(--ink);
 }
 
+/* Il contenitore standard. Un solo bordo appena percettibile e una velatura
+   bianca al 2% sul bordo alto: è il minimo che dà a una scheda il senso di
+   stare *sopra* la pagina invece che dentro un rettangolo disegnato. Non è un
+   nuovo colore di superficie — la palette non ne ha spazio: `--ink-faint` su
+   `--surface-2` è già a 4,51:1 e l'accento su un grigio più chiaro scenderebbe
+   a 4,17:1, sotto la soglia AA. L'elevazione qui si ottiene con la luce, non
+   con un altro grigio. */
+.scheda {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.02);
+}
+
+/* Le intestazioni stringono appena la spaziatura: sopra i 20px la traccia
+   predefinita di Inter è pensata per il testo corrente e fa sembrare i titoli
+   slegati. */
+h1,
+h2 {
+  letter-spacing: -0.011em;
+}
+
+/* Riga di tabella o di elenco al passaggio del mouse: usa `--surface-2`, che è
+   già nella palette e già verificato dal controllo di contrasto. */
+.riga-interattiva {
+  transition: background 0.12s;
+}
+.riga-interattiva:hover {
+  background: var(--surface-2);
+}
+
+/* Le barre di scorrimento predefinite di Windows sono chiare e larghe, e su
+   un'interfaccia scura spiccano più del contenuto. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
 .campo-input {
   width: 100%;
   border-radius: 0.5rem;

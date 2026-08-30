@@ -12,6 +12,7 @@ import { ETICHETTE_ATTIVITA, ETICHETTE_FASE, aperta, valorePerCliente } from "@/
 import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { NuovaAttivitaForm } from "@/app/(app)/crm/Moduli";
 import { StatoBadge } from "@/components/StatoBadge";
+import { IntestazionePagina, Metrica, TitoloSezione } from "@/components/Pagina";
 
 /**
  * La scheda cliente non è più un modulo da correggere: è il posto dove si vede
@@ -48,35 +49,33 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <Link href="/clienti" className="text-xs text-ink-muted hover:text-ink">
-          ← Clienti
-        </Link>
-        <h1 className="text-xl font-semibold mt-2">{nomeCliente(cliente)}</h1>
-        <p className="text-sm text-ink-muted mt-1">
-          {[cliente.partitaIva || cliente.codiceFiscale, cliente.comune].filter(Boolean).join(" · ") ||
-            "Nessun identificativo fiscale registrato"}
-        </p>
-      </div>
+      <IntestazionePagina
+        ritorno={{ href: "/clienti", testo: "Clienti" }}
+        titolo={nomeCliente(cliente)}
+        descrizione={
+          [cliente.partitaIva || cliente.codiceFiscale, cliente.comune].filter(Boolean).join(" · ") ||
+          "Nessun identificativo fiscale registrato"
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Riquadro
+        <Metrica
           etichetta="Fatturato"
           valore={formattaEuro(valore?.fatturatoTotale ?? 0)}
           nota={`${valore?.documenti ?? 0} documenti`}
           accento
         />
-        <Riquadro
+        <Metrica
           etichetta="Ultima fattura"
           valore={valore?.ultimaFattura ? formattaData(valore.ultimaFattura) : "—"}
           nota={valore?.ultimaFattura ? "" : "mai fatturato"}
         />
-        <Riquadro
+        <Metrica
           etichetta="Trattative aperte"
           valore={String(aperte.length)}
           nota={formattaEuro(aperte.reduce((somma, t) => somma + t.valoreStimato, 0))}
         />
-        <Riquadro
+        <Metrica
           etichetta="Ultimo contatto"
           valore={ultimoContatto ? formattaData(ultimoContatto) : "—"}
           nota={ultimoContatto ? "" : "nessuno registrato"}
@@ -85,8 +84,8 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
 
       {trattative.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide mb-3">Trattative</h2>
-          <ul className="rounded-xl border border-line bg-surface divide-y divide-line">
+          <TitoloSezione>Trattative</TitoloSezione>
+          <ul className="scheda divide-y divide-line">
             {trattative.map((t) => (
               <li key={t.id} className="px-4 sm:px-5 py-3 flex flex-wrap items-baseline justify-between gap-3 text-sm">
                 <div className="min-w-0">
@@ -110,8 +109,8 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
 
       {attivita.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide mb-3">Storico dei contatti</h2>
-          <ol className="rounded-xl border border-line bg-surface divide-y divide-line">
+          <TitoloSezione>Storico dei contatti</TitoloSezione>
+          <ol className="scheda divide-y divide-line">
             {attivita.map((a) => (
               <li key={a.id} className="px-4 sm:px-5 py-3 text-sm">
                 <div className="text-xs text-ink-faint">
@@ -132,8 +131,8 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
 
       {sue.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide mb-3">Documenti emessi</h2>
-          <ul className="rounded-xl border border-line bg-surface divide-y divide-line">
+          <TitoloSezione>Documenti emessi</TitoloSezione>
+          <ul className="scheda divide-y divide-line">
             {sue.slice(0, 10).map((f) => (
               <li key={f.id} className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                 <Link href={`/fatture/${f.id}`} className="min-w-0 flex-1 hover:text-accent transition">
@@ -148,7 +147,7 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
         </section>
       )}
 
-      <details className="group rounded-xl border border-line bg-surface overflow-hidden">
+      <details className="group scheda overflow-hidden">
         <summary className="marker:hidden [&::-webkit-details-marker]:hidden px-4 sm:px-5 py-3.5 cursor-pointer select-none flex items-center justify-between gap-4">
           <div>
             <div className="text-sm font-medium">Dati anagrafici e fiscali</div>
@@ -167,22 +166,3 @@ export default async function PaginaCliente({ params }: { params: Promise<{ id: 
   );
 }
 
-function Riquadro({
-  etichetta,
-  valore,
-  nota,
-  accento,
-}: {
-  etichetta: string;
-  valore: string;
-  nota: string;
-  accento?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="text-xs text-ink-muted mb-1.5">{etichetta}</div>
-      <div className={`text-lg font-semibold tabular-nums ${accento ? "text-accent" : "text-ink"}`}>{valore}</div>
-      {nota && <div className="text-xs text-ink-faint mt-1">{nota}</div>}
-    </div>
-  );
-}

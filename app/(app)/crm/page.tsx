@@ -15,6 +15,7 @@ import {
 import { formattaData, formattaEuro, giorniMancanti } from "@/lib/ui/format";
 import { NuovaAttivitaForm, NuovaTrattativaForm } from "./Moduli";
 import { completaPasso, rimuoviTrattativa, spostaTrattativa } from "./actions";
+import { IntestazionePagina, Metrica, TitoloSezione } from "@/components/Pagina";
 
 export default async function PaginaCrm() {
   const { supabase, user } = await richiediUtente();
@@ -40,27 +41,24 @@ export default async function PaginaCrm() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold mb-1">Trattative</h1>
-        <p className="text-sm text-ink-muted">
-          Cosa è in corso, quanto vale davvero e chi è fermo da troppo tempo. Nessuno perde una trattativa
-          decidendo di perderla: smette di seguirla senza accorgersene.
-        </p>
-      </div>
+      <IntestazionePagina
+        titolo="Trattative"
+        descrizione="Cosa è in corso, quanto vale davvero e chi è fermo da troppo tempo. Nessuno perde una trattativa decidendo di perderla: smette di seguirla senza accorgersene."
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Riquadro etichetta="In pipeline" valore={formattaEuro(aperto)} nota={`${trattative.filter((t) => t.fase !== "vinta" && t.fase !== "persa").length} aperte`} />
-        <Riquadro etichetta="Valore ponderato" valore={formattaEuro(ponderato)} nota="pesato per probabilità" accento />
-        <Riquadro
+        <Metrica etichetta="In pipeline" valore={formattaEuro(aperto)} nota={`${trattative.filter((t) => t.fase !== "vinta" && t.fase !== "persa").length} aperte`} />
+        <Metrica etichetta="Valore ponderato" valore={formattaEuro(ponderato)} nota="pesato per probabilità" accento />
+        <Metrica
           etichetta="Trattative vinte"
           valore={conversione.percentuale === null ? "—" : `${conversione.percentuale}%`}
           nota={conversione.percentuale === null ? "nessuna ancora chiusa" : `${conversione.vinte} su ${conversione.vinte + conversione.perse}`}
         />
-        <Riquadro etichetta="Valore vinto" valore={formattaEuro(conversione.valoreVinto)} nota="trattative chiuse positivamente" />
+        <Metrica etichetta="Valore vinto" valore={formattaEuro(conversione.valoreVinto)} nota="trattative chiuse positivamente" />
       </div>
 
       {daFare.length > 0 && (
-        <section className="rounded-xl border border-line bg-surface overflow-hidden">
+        <section className="scheda overflow-hidden">
           <div className="px-4 sm:px-5 py-3 border-b border-line text-xs text-ink-muted uppercase tracking-wide">
             Da fare
           </div>
@@ -119,7 +117,7 @@ export default async function PaginaCrm() {
 
       <div className="grid gap-4 md:grid-cols-3 items-start">
         {colonne.map((colonna) => (
-          <section key={colonna.fase} className="rounded-xl border border-line bg-surface overflow-hidden">
+          <section key={colonna.fase} className="scheda overflow-hidden">
             <div className="px-4 py-3 border-b border-line flex items-baseline justify-between gap-2">
               <span className="text-sm font-medium">{colonna.etichetta}</span>
               <span className="text-xs text-ink-muted tabular-nums">{formattaEuro(colonna.totale)}</span>
@@ -170,8 +168,8 @@ export default async function PaginaCrm() {
 
       {attivita.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-ink-muted uppercase tracking-wide mb-3">Ultimi contatti</h2>
-          <ul className="rounded-xl border border-line bg-surface divide-y divide-line">
+          <TitoloSezione>Ultimi contatti</TitoloSezione>
+          <ul className="scheda divide-y divide-line">
             {attivita.slice(0, 10).map((a) => (
               <li key={a.id} className="px-4 sm:px-5 py-3 text-sm">
                 <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-ink-faint">
@@ -220,22 +218,3 @@ function FormaFase({ id, fase, etichetta }: { id: string; fase: string; etichett
   );
 }
 
-function Riquadro({
-  etichetta,
-  valore,
-  nota,
-  accento,
-}: {
-  etichetta: string;
-  valore: string;
-  nota: string;
-  accento?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="text-xs text-ink-muted mb-1.5">{etichetta}</div>
-      <div className={`text-lg font-semibold tabular-nums ${accento ? "text-accent" : "text-ink"}`}>{valore}</div>
-      <div className="text-xs text-ink-faint mt-1">{nota}</div>
-    </div>
-  );
-}

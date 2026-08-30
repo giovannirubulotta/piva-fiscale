@@ -9,6 +9,7 @@ import { nomeCliente } from "@/lib/domain/cliente";
 import { formattaData } from "@/lib/ui/format";
 import { CaricaDocumentoForm } from "./CaricaDocumentoForm";
 import { rimuoviDocumento } from "./actions";
+import { IntestazionePagina, Vuoto } from "@/components/Pagina";
 
 export default async function PaginaDocumenti() {
   const { supabase, user } = await richiediUtente();
@@ -28,14 +29,10 @@ export default async function PaginaDocumenti() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold mb-1">Documenti</h1>
-        <p className="text-sm text-ink-muted">
-          Ricevute, contratti, quietanze F24, Certificazioni Uniche. I documenti fiscali vanno conservati per otto
-          anni: tenerli qui significa non doverli cercare tra le mail quando servono, che è sempre il momento in cui
-          c&apos;è meno tempo.
-        </p>
-      </div>
+      <IntestazionePagina
+        titolo="Documenti"
+        descrizione="Ricevute, contratti, quietanze F24, Certificazioni Uniche. I documenti fiscali vanno conservati per otto anni: tenerli qui significa non doverli cercare tra le mail quando servono, che è sempre il momento in cui c'è meno tempo."
+      />
 
       <CaricaDocumentoForm
         fatture={fatture.map((f) => ({ valore: f.id, etichetta: etichetteFatture.get(f.id) ?? numeroFattura(f) }))}
@@ -43,11 +40,11 @@ export default async function PaginaDocumenti() {
       />
 
       {allegati.length === 0 ? (
-        <div className="rounded-xl border border-line bg-surface px-5 py-8 text-center text-sm text-ink-muted">
-          Nessun documento in archivio.
+        <div className="scheda">
+          <Vuoto messaggio="Nessun documento in archivio: carica il primo qui sopra." />
         </div>
       ) : (
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
+        <div className="scheda overflow-hidden">
           <div className="px-4 sm:px-5 py-3 border-b border-line text-xs text-ink-muted uppercase tracking-wide">
             {allegati.length === 1 ? "1 documento" : `${allegati.length} documenti`}
           </div>
@@ -60,7 +57,7 @@ export default async function PaginaDocumenti() {
                   : null;
 
               return (
-                <li key={allegato.id} className="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 text-sm">
+                <li key={allegato.id} className="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 text-sm riga-interattiva">
                   <div className="min-w-0 flex-1">
                     <a
                       href={`/api/allegati/${allegato.id}`}

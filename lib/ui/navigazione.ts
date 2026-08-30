@@ -27,9 +27,11 @@ export const GRUPPI_NAV: GruppoNav[] = [
     titolo: "Lavoro",
     voci: [
       { href: "/crm", etichetta: "Trattative" },
+      { href: "/preventivi", etichetta: "Preventivi" },
       { href: "/fatture", etichetta: "Fatture" },
       { href: "/clienti", etichetta: "Clienti" },
       { href: "/spese", etichetta: "Spese" },
+      { href: "/listino", etichetta: "Listino" },
       { href: "/documenti", etichetta: "Documenti" },
     ],
   },

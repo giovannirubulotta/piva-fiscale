@@ -31,6 +31,8 @@ interface Azione {
 
 const AZIONI: Azione[] = [
   { etichetta: "Nuova fattura", href: "/fatture/nuova", descrizione: "Emetti un documento" },
+  { etichetta: "Nuovo preventivo", href: "/preventivi/nuovo", descrizione: "Prepara un'offerta" },
+  { etichetta: "Listino", href: "/listino", descrizione: "Prestazioni ricorrenti" },
   { etichetta: "Nuovo cliente", href: "/clienti/nuovo", descrizione: "Aggiungi in anagrafica" },
   { etichetta: "Trattative", href: "/crm", descrizione: "Pipeline e prossimi passi" },
   { etichetta: "Registra spesa", href: "/spese", descrizione: "Annota un costo" },

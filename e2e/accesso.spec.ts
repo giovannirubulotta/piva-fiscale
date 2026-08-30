@@ -14,6 +14,9 @@ import { test, expect } from "@playwright/test";
 const ROTTE_PROTETTE = [
   "/",
   "/crm",
+  "/preventivi",
+  "/preventivi/nuovo",
+  "/listino",
   "/fatture",
   "/fatture/nuova",
   "/clienti",

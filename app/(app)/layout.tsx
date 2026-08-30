@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { esci } from "@/app/login/actions";
+import { BarraInferiore, MenuCompleto } from "@/components/NavPrincipale";
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -9,58 +9,53 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
 
   const annoCorrente = new Date().getFullYear();
-  const VOCI_NAV = [
-    { href: "/", etichetta: "Dashboard" },
-    { href: "/fatture", etichetta: "Fatture" },
-    { href: "/clienti", etichetta: "Clienti" },
-    { href: "/spese", etichetta: "Spese" },
-    { href: "/scadenze", etichetta: "Scadenze" },
-    { href: "/f24", etichetta: "Genera F24" },
-    { href: "/quadro-lm", etichetta: "Quadro LM" },
-    { href: "/lavoro-dipendente", etichetta: "Lavoro dipendente" },
-    { href: "/requisiti", etichetta: "Requisiti regime" },
-    { href: "/riferimenti-normativi", etichetta: "Riferimenti normativi" },
-    { href: "/impostazioni", etichetta: "Impostazioni" },
-    { href: "/diagnostica", etichetta: "Diagnostica" },
-    { href: "/privacy", etichetta: "Privacy e dati" },
-    { href: `/api/report?anno=${annoCorrente}`, etichetta: "Esporta CSV" },
-  ];
 
   return (
     <div className="flex-1 flex flex-col md:flex-row min-h-screen">
       <a href="#contenuto" className="salta-al-contenuto">
         Salta al contenuto
       </a>
-      {/* Barra mobile: <details>/<summary> nativi, stesso pattern di InfoCampo — niente JS per aprire/chiudere il menu. */}
+
+      {/* Intestazione mobile: il menu completo sta dietro <details>/<summary>
+          nativi, stesso pattern di InfoCampo — niente JS per aprire e chiudere,
+          funziona da tastiera e con screen reader senza ARIA aggiunta a mano.
+          Le quattro voci quotidiane non stanno qui ma nella barra inferiore. */}
       <details className="group md:hidden border-b border-line bg-surface sticky top-0 z-30">
         <summary className="marker:hidden [&::-webkit-details-marker]:hidden flex items-center justify-between px-4 py-3 cursor-pointer select-none">
           <div>
             <div className="text-xs tracking-[0.2em] text-accent font-medium">GAR</div>
             <div className="text-xs text-ink-muted">Fiscale P.IVA</div>
           </div>
-          <span className="text-xs text-ink-muted border border-line rounded-lg px-3 py-1.5 group-open:hidden">Menu</span>
-          <span className="text-xs text-ink-muted border border-line rounded-lg px-3 py-1.5 hidden group-open:inline">Chiudi</span>
+          <span className="text-xs text-ink-muted border border-line rounded-lg px-3 py-1.5 group-open:hidden">
+            Altro
+          </span>
+          <span className="text-xs text-ink-muted border border-line rounded-lg px-3 py-1.5 hidden group-open:inline">
+            Chiudi
+          </span>
         </summary>
-        <nav aria-label="Navigazione principale" className="px-3 pb-3 pt-1 flex flex-col gap-0.5 border-t border-line bg-surface">
-          {VOCI_NAV.map((voce) => (
-            <Link
-              key={voce.href}
-              href={voce.href}
+        <nav
+          aria-label="Navigazione principale"
+          className="px-3 pb-3 pt-3 border-t border-line bg-surface max-h-[70vh] overflow-y-auto"
+        >
+          <MenuCompleto compatto />
+          <div className="mt-3 pt-3 border-t border-line flex flex-col gap-0.5">
+            <a
+              href={`/api/report?anno=${annoCorrente}`}
               className="rounded-lg px-3 py-2.5 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
             >
-              {voce.etichetta}
-            </Link>
-          ))}
-          <div className="mt-2 pt-3 border-t border-line flex items-center justify-between gap-2">
-            <span className="px-3 text-xs text-ink-faint truncate">{user?.email}</span>
-            <form action={esci}>
-              <button
-                type="submit"
-                className="shrink-0 rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
-              >
-                Esci
-              </button>
-            </form>
+              Esporta CSV {annoCorrente}
+            </a>
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <span className="px-3 text-xs text-ink-faint truncate">{user?.email}</span>
+              <form action={esci}>
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
+                >
+                  Esci
+                </button>
+              </form>
+            </div>
           </div>
         </nav>
       </details>
@@ -71,16 +66,14 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <div className="text-xs tracking-[0.2em] text-accent font-medium">GAR</div>
           <div className="text-sm text-ink-muted mt-0.5">Fiscale P.IVA</div>
         </div>
-        <nav aria-label="Navigazione principale" className="flex-1 px-3 py-4 flex flex-col gap-0.5">
-          {VOCI_NAV.map((voce) => (
-            <Link
-              key={voce.href}
-              href={voce.href}
-              className="rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
-            >
-              {voce.etichetta}
-            </Link>
-          ))}
+        <nav aria-label="Navigazione principale" className="flex-1 px-3 py-4 overflow-y-auto">
+          <MenuCompleto />
+          <a
+            href={`/api/report?anno=${annoCorrente}`}
+            className="mt-4 block rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
+          >
+            Esporta CSV {annoCorrente}
+          </a>
         </nav>
         <div className="px-3 py-4 border-t border-line">
           <div className="px-3 text-xs text-ink-faint truncate mb-2">{user?.email}</div>
@@ -94,9 +87,14 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           </form>
         </div>
       </aside>
+
       <main id="contenuto" className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10">{children}</div>
+        {/* Lo spazio in basso su mobile è la barra inferiore: senza, l'ultimo
+            elemento di ogni pagina resta coperto e non si raggiunge. */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10 pb-24 md:pb-10">{children}</div>
       </main>
+
+      <BarraInferiore />
     </div>
   );
 }

@@ -133,3 +133,37 @@ European Accessibility Act.
 - zoom non bloccato (`maximumScale: 5`): impedirlo è una barriera;
 - `prefers-reduced-motion` rispettato, transizioni azzerate;
 - bersagli di tocco da 44px su mobile.
+
+## Il vocabolario delle pagine
+
+`components/Pagina.tsx` contiene i quattro elementi con cui è costruita ogni
+schermata: `IntestazionePagina`, `Metrica`, `Scheda`, `Vuoto`, più
+`TitoloSezione`. Non è solo deduplicazione — il riquadro di una metrica era
+stato riscritto tre volte identico, e la regola del progetto dice di estrarre
+alla terza occorrenza. È soprattutto coerenza: un software sembra un software
+quando il titolo sta sempre dove ci si aspetta, le azioni sono sempre a destra e
+un numero importante ha sempre lo stesso peso.
+
+`Metrica` accetta `accento` per il valore che la pagina esiste per mostrare —
+**uno per schermata**, altrimenti non accentua più niente — e `stato` per quando
+il numero *è* uno stato (ok, warn, danger), mai per decorare.
+
+`Vuoto` dice cosa manca e come rimediare. Una schermata che dice soltanto
+"nessun risultato" lascia chi guarda a chiedersi se sia rotta.
+
+## Perché non esiste una terza superficie
+
+L'elevazione di una scheda si ottiene con una velatura bianca al 2% sul bordo
+alto (`box-shadow: inset 0 1px 0`), non con un grigio più chiaro. Non è una
+preferenza: la scala scura è già al limite. Misurato, con `npm run contrasto`
+come riferimento:
+
+| Superficie | `--ink-faint` | `--accent` |
+|---|---|---|
+| `--surface-2` `#181c25` | 4,51:1 | 4,79:1 |
+| ipotetica `#1e2330` | **4,15:1** | **4,17:1** |
+
+Una superficie più chiara porterebbe due token sotto la soglia AA di 4,5:1, e le
+uniche uscite sarebbero schiarire il testo attenuato — riducendo la gerarchia —
+o schiarire l'accento, cioè cambiare il colore del marchio. L'accessibilità vale
+più di un livello di profondità in più, e la luce costa meno di un colore.

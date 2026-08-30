@@ -9,6 +9,21 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.5.0] — 2026-08-30
+
+### Corretto
+
+- **Eliminare una fattura non funzionava** quando una nota di credito la stornava: il vincolo del database rifiutava, l'azione non catturava nulla e l'utente riceveva una schermata di errore senza spiegazione. Ora il motivo si verifica prima e si spiega in italiano.
+
+### Aggiunto
+
+- Pannello di eliminazione che **elenca le conseguenze** invece di chiedere «sei sicuro?»: il numero di trasmissione che resta bruciato, l'incasso che esce dai riepiloghi dell'anno, gli allegati eliminati insieme al documento.
+
+### Modificato
+
+- **Vocabolario visivo unico**: intestazione di pagina, metrica, scheda e stato vuoto vengono da un solo componente. Il riquadro di una metrica era stato riscritto tre volte identico in tre pagine.
+- Titoli con spaziatura ottica corretta, righe di elenco con stato al passaggio del mouse, barre di scorrimento coerenti con il tema scuro.
+
 ## [1.4.0] — 2026-08-30
 
 Prima fetta dei moduli: il CRM.

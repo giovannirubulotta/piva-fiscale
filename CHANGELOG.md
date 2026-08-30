@@ -9,6 +9,23 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.4.0] — 2026-08-30
+
+Prima fetta dei moduli: il CRM.
+
+### Aggiunto
+
+- **Trattative** con pipeline a tre fasi, valore in gioco e **valore ponderato** per probabilità. Le trattative chiuse non entrano nella previsione, nemmeno le vinte: quelle sono fatturato.
+- **Trattative ferme**: le opportunità aperte senza contatti da oltre tre settimane, in evidenza. Non si perde una trattativa decidendo di perderla.
+- **Attività e prossimi passi**: chiamate, email, incontri e note per cliente, con il prossimo passo e la sua data. Un passo senza data viene rifiutato con una spiegazione, invece che accolto e dimenticato.
+- **Scheda cliente unificata**: fatturato reale calcolato dai documenti emessi, trattative, storico dei contatti e ultime fatture. I dati anagrafici stanno in fondo, dietro un pannello.
+- Tasso di conversione e valore vinto.
+
+### Corretto
+
+- **Tutte le policy RLS rivalutavano `auth.uid()` per ogni riga esaminata.** Ora la funzione è racchiusa in una sottoquery scalare e Postgres la calcola una volta per query. Il comportamento di sicurezza è identico; cambia quante volte si paga la stessa risposta. Segnalato dall'advisor di Supabase, corretto su tutte e quattordici le policy e non solo sulle nuove.
+- Chiave esterna `fiscale_attivita.trattativa_id` senza indice.
+
 ## [1.3.0] — 2026-08-30
 
 Prima fetta della trasformazione da applicazione fiscale a strumento di lavoro:

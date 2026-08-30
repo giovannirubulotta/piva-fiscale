@@ -522,3 +522,44 @@ Il linter ha bocciato due cose. La prima, `setState` dentro un effetto per azzer
 3. **Calendario** interno con le scadenze fiscali già dentro ed esportazione `.ics`.
 4. **Posta** IMAP/SMTP con credenziali cifrate.
 5. **Coerenza visiva**: un'intestazione di pagina unica su tutte le sezioni, oggi ognuna ha la sua.
+
+## Fase 13: il CRM
+
+### Cosa aggiunge davvero: il tempo
+
+L'anagrafica clienti esisteva già e dice *chi sono*. Quello che mancava è *cosa sta succedendo*: quali opportunità sono aperte, quanto valgono, quando ci si è parlati l'ultima volta. Oltre la decina di clienti quella seconda informazione non sta più in testa, e il costo di perderla non è teorico — è una proposta mai richiamata.
+
+### Valore ponderato, non somma grezza
+
+La somma delle trattative aperte è il numero che ogni venditore si racconta. Moltiplicare ciascuna per la probabilità dichiarata è ciò che lo rende utilizzabile per decidere se accettare il prossimo lavoro.
+
+Le trattative **vinte restano fuori dal ponderato**. Sembra controintuitivo, ed è il punto: una vinta è fatturato, non previsione. Contarla di nuovo tra le aspettative gonfia il futuro con qualcosa che è già passato.
+
+La probabilità è **dichiarata dall'utente e separata dalla fase**. La fase la suggerisce quando si crea la trattativa, ma non la impone e non la sovrascrive dopo una modifica manuale: due proposte allo stesso stadio possono valere molto diversamente, e appiattirle su una percentuale fissa per fase produce una previsione precisa in apparenza e arbitraria in sostanza — la peggiore categoria di numero.
+
+### `trattativeFerme` è la funzione che giustifica il modulo
+
+Tutto il resto è contabilità di opportunità, che si può tenere anche su un foglio. Questa no: elenca le trattative aperte su cui non si mette mano da oltre tre settimane, contando dall'ultima attività registrata sul cliente e, in mancanza, dall'ultimo aggiornamento della trattativa — che è comunque un momento in cui qualcuno ci ha messo mano.
+
+Il criterio è dichiarato in una costante con un nome che si legge, non nascosto in un `21` dentro un confronto.
+
+### Un prossimo passo senza data viene rifiutato
+
+Il modulo delle attività accetta "cosa è successo" e "cosa va fatto dopo". Se si scrive il secondo senza una data, il salvataggio si ferma e lo spiega: un'intenzione senza scadenza non comparirebbe in nessun elenco e verrebbe dimenticata. Accoglierla in silenzio sarebbe stato più gentile e meno utile — e avrebbe svalutato gli impegni veri messi accanto.
+
+### Il difetto che l'advisor ha trovato, e che era ovunque
+
+Dopo la migrazione, l'advisor di Supabase ha segnalato `auth_rls_initplan` su tutte le tabelle fiscali: una policy scritta `auth.uid() = user_id` fa rivalutare la funzione **una volta per riga esaminata**. La forma corretta è `(select auth.uid()) = user_id`, che Postgres promuove a InitPlan e calcola una volta per query.
+
+Il comportamento di sicurezza è identico — cambia solo quante volte si paga la stessa risposta — ma il costo cresce linearmente con le righe, e la correzione è gratuita. Era ripetuto su **quattordici policy su quattordici**, cioè in ogni tabella scritta finora: correggere solo le due nuove sarebbe stato un lavoro a metà, quindi la migrazione le riscrive tutte con un ciclo su `pg_policies` e verifica che ne resti zero da correggere.
+
+Vale la pena notare cosa ha trovato il difetto: non una revisione del codice, ma uno strumento eseguito **dopo** la migrazione. La lezione è procedurale — l'advisor va eseguito a ogni cambio di schema, non a fine progetto.
+
+Nella stessa migrazione, l'indice mancante sulla chiave esterna `fiscale_attivita.trattativa_id`: le altre due erano indicizzate, questa no. Una svista, non una scelta, ed è utile scriverlo per non rileggerla un giorno come se fosse stata deliberata.
+
+### Cosa arriva dopo
+
+1. **Note** collegate a clienti e trattative.
+2. **Calendario** interno con dentro le scadenze fiscali, ed esportazione `.ics`.
+3. **Posta** IMAP/SMTP con credenziali cifrate.
+4. **Coerenza visiva**: un'intestazione di pagina unica, oggi ogni sezione ha la sua.

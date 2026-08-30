@@ -2,7 +2,8 @@
 
 Applicazione web personale per la gestione della partita IVA in regime
 forfettario: fatturazione elettronica con generazione del file XML per il
-Sistema di Interscambio, anagrafica clienti, previsione di chiusura dell'anno,
+Sistema di Interscambio, CRM con trattative e storico dei contatti,
+previsione di chiusura dell'anno,
 stato di incasso e solleciti, archivio documenti, calcolo di imposta sostitutiva
 e contributi INPS Gestione Separata, scadenzario, generatore F24, riepilogo del
 Quadro LM, archivio annuale per il commercialista e base di conoscenza normativa
@@ -80,15 +81,15 @@ Tutti bloccanti, tutti in CI (`.github/workflows/verifica.yml`).
 
 ### Cosa è coperto dai test
 
-**Dominio** (178 test): calcolo di imposta e contributi, previsione di fine
+**Dominio** (204 test): calcolo di imposta e contributi, previsione di fine
 anno, stato di incasso e testo dei solleciti, soglie e cause di esclusione dal
-forfettario, scadenzario, righe F24, Quadro LM, totali di fattura, generazione
-dell'XML e scrittura dell'archivio ZIP. Sei esemplari di XML sono validati contro lo schema XSD
+forfettario, scadenzario, righe F24, Quadro LM, pipeline commerciale e valore per cliente,
+totali di fattura, generazione dell'XML e scrittura dell'archivio ZIP. Sei esemplari di XML sono validati contro lo schema XSD
 ufficiale in `schema/` — struttura, ordine degli elementi, tipi e pattern; i
 limiti di quella validazione sono descritti nell'intestazione di
 `lib/domain/fatturaXml.xsd.test.ts`.
 
-**End-to-end** (48 test, desktop e mobile): perimetro di autenticazione su tutte
+**End-to-end** (50 test, desktop e mobile): perimetro di autenticazione su tutte
 le rotte, API che non devono restituire dati a un anonimo, pagina di accesso,
 accessibilità di base.
 
@@ -128,7 +129,8 @@ firmati a sessanta secondi.
 
 Le tabelle vivono nel progetto Supabase `gar-fascicolo`, con prefisso `fiscale_`
 per restare separate dal resto del progetto. Ogni tabella ha Row Level Security
-attiva con policy `auth.uid() = user_id`.
+attiva con policy `(select auth.uid()) = user_id` — la sottoquery non è
+ornamentale: senza, Postgres rivaluta la funzione per ogni riga esaminata.
 
 Lo schema si modifica con migrazioni, mai a mano dalla dashboard. Dopo ogni
 migrazione va rigenerato `lib/supabase/database.types.ts`, che è un file

@@ -6,6 +6,8 @@ import { leggiFatture, leggiIncassiDaFatture } from "@/lib/data/fatture";
 import { leggiClienti } from "@/lib/data/clienti";
 import { numeroFattura, totaleDocumento } from "@/lib/domain/fattura";
 import { AndamentoFatturato, serieAnno } from "@/components/AndamentoFatturato";
+import { PrevisioneAnno } from "@/components/PrevisioneAnno";
+import { calcolaPrevisione } from "@/lib/domain/previsione";
 import { segnaIncassata } from "./fatture/actions";
 import { leggiStatiScadenze } from "@/lib/data/scadenzeStato";
 import { leggiRequisitiForfettario } from "@/lib/data/requisitiForfettario";
@@ -71,6 +73,7 @@ export default async function Dashboard() {
   }
 
   const riepilogoCorrente = calcolaRiepilogoAnno(annoCorrente, incassi, profilo, aliquoteCorrente);
+  const previsione = calcolaPrevisione(annoCorrente, incassi, fatture, profilo, aliquoteCorrente, new Date());
   const chiusi = riepiloghiAnniChiusi(incassi, profilo, tutteLeAliquote, annoCorrente);
   const scadenzeAnnuali = generaScadenzeAnnuali(chiusi);
   const scadenzeBollo = generaScadenzeBollo(incassi, annoCorrente - 1).concat(generaScadenzeBollo(incassi, annoCorrente));
@@ -141,6 +144,8 @@ export default async function Dashboard() {
           </Link>
         </div>
       )}
+
+      <PrevisioneAnno previsione={previsione} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Riquadro etichetta="Fatturato incassato YTD" valore={formattaEuro(riepilogoCorrente.fatturatoIncassato)} />

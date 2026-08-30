@@ -10,12 +10,12 @@ import type {
  * Sopra questa soglia si esce dal regime forfettario a partire dall'anno
  * successivo (permanenza nell'anno in corso comunque garantita).
  */
-const SOGLIA_PERMANENZA = 85_000;
+export const SOGLIA_PERMANENZA = 85_000;
 /**
  * Sopra questa soglia l'uscita è immediata: si applica l'IVA già alle
  * operazioni successive al superamento, nello stesso anno.
  */
-const SOGLIA_USCITA_IMMEDIATA = 100_000;
+export const SOGLIA_USCITA_IMMEDIATA = 100_000;
 
 interface CampoRequisito {
   chiave: string;

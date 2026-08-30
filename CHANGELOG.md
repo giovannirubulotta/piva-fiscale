@@ -9,6 +9,19 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.6.0] — 2026-08-30
+
+Le due funzionalità che il gestionale di regime-forfettario.it ha e qui
+mancavano. Il resto di quel sito è uno studio di commercialisti: apertura della
+partita IVA, contabilità seguita, assistenza. Sono persone, non funzionalità.
+
+### Aggiunto
+
+- **Listino** delle prestazioni ricorrenti, richiamabili nel preventivo con un menu. Le voci si ritirano invece di essere eliminate: restano citate nei documenti già emessi.
+- **Preventivi** con numerazione propria, righe, validità obbligatoria, condizioni e stampa. Lo stato «scaduto» è derivato dalla data, non memorizzato.
+- **Trasformazione in fattura** di un preventivo accettato: le righe vengono copiate e la fattura nasce in bozza.
+- Riepilogo: valore in attesa di risposta, valore accettato, tasso di accettazione calcolato solo su chi ha risposto, e scaduti contati a parte.
+
 ## [1.5.0] — 2026-08-30
 
 ### Corretto

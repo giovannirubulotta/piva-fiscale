@@ -602,3 +602,47 @@ I commit fino alla 1.4.0 restano non firmati e attribuiti a `netrakfr`. Rifirmar
 ### Nota operativa
 
 La chiave privata di firma vive nell'ambiente di sviluppo, che è temporaneo. Se quell'ambiente viene ricreato, serve una chiave nuova e un nuovo caricamento su GitHub — un passaggio manuale che si ripete. È un costo noto della scelta, non una svista.
+
+## Fase 15: preventivi e listino
+
+Richiesta: duplicare le funzionalità di `regime-forfettario.it`. Il primo lavoro è stato distinguere cosa fosse duplicabile.
+
+### Quel sito non è un software
+
+È uno **studio di commercialisti** che offre un gestionale ai propri clienti. Apertura della partita IVA, contabilità seguita 365 giorni l'anno, un numero di telefono personale, consulenza: sono persone. L'apertura della P.IVA richiede un intermediario abilitato e l'assistenza richiede qualcuno che risponda — nessuna delle due si ottiene scrivendo codice, e prometterlo sarebbe stato disonesto.
+
+Del loro gestionale — fatturazione elettronica, preventivi, gestione prodotti, controllo di contabilità e fatturato — qui mancavano solo **preventivi** e **listino**. Il resto c'era già, insieme a scadenzario, F24, Quadro LM, documenti, CRM e previsione, che loro non hanno.
+
+Si replicano le capacità, non i materiali: e-book, testi, layout e marchio restano loro.
+
+### «Scaduto» non è una colonna
+
+Uno stato memorizzato è vero solo finché qualcuno lo aggiorna. Una colonna `scaduto` avrebbe richiesto un processo notturno da scrivere, sorvegliare e riparare — e tra un'esecuzione e l'altra una riga non aggiornata **mentirebbe**, che è peggio di un dato assente perché nessuno la mette in dubbio.
+
+La data di validità c'è già: lo stato si deriva da quella e non può essere in ritardo su sé stesso. Solo un preventivo *inviato* scade: una bozza non è mai stata offerta, e un accettato o un rifiutato hanno già ricevuto risposta, che non decade con il calendario.
+
+### Gli scaduti non sono rifiuti
+
+Nel tasso di accettazione entrano solo i preventivi che hanno ricevuto una risposta. Contare gli scaduti tra i rifiuti nasconderebbe un problema di follow-up dietro un tasso di rifiuto: chi non ha risposto non ha detto no, e le due cose si correggono in modi opposti — uno cambiando l'offerta, l'altro richiamando.
+
+Per la stessa ragione il riepilogo mostra gli scaduti come voce a sé, con l'etichetta «silenzi, non rifiuti».
+
+### Numerazione separata, e perché
+
+I preventivi hanno una serie propria (`P3/2026`). Quella delle fatture è vincolata, progressiva e i suoi numeri non si riusano: farle condividere avrebbe consumato progressivi fiscali per documenti che fiscali non sono. Il prefisso `P` serve a non confondere i due numeri in una conversazione con un cliente.
+
+### La conversione copia, non collega
+
+Trasformare un preventivo accettato in fattura duplica le righe. Sarebbe stato più elegante un riferimento condiviso, ed è precisamente ciò che non si vuole: correggere un prezzo in fattura riscriverebbe l'offerta che il cliente ha accettato, cioè **la prova di cosa era stato pattuito**. Da quel momento i due documenti hanno vite separate.
+
+La fattura nasce **in bozza**, non emessa. Convertire è un gesto di comodità; emettere un documento fiscale è una decisione, e non deve essere l'effetto collaterale di un clic su «trasforma».
+
+### Il listino si ritira, non si cancella
+
+Una prestazione che non offri più resta citata nelle fatture già emesse. Disattivarla la toglie dai menu e la lascia nell'archivio; l'eliminazione vera resta disponibile, ma è pensata per le voci create per sbaglio.
+
+L'aritmetica dell'anteprima del totale nel modulo è la stessa del dominio, in centesimi interi. Un'anteprima che diverge di un centesimo dal totale salvato è peggio di nessuna anteprima: insegna a non fidarsi dei numeri sullo schermo.
+
+### Non costruito, per ora
+
+Il **simulatore pubblico** e l'**assistente sul forfettario** sono stati proposti e non scelti. Del secondo vale la pena registrare il perché sarebbe una decisione e non una funzionalità: richiede una chiave API a consumo, quindi un costo ricorrente da misurare, oltre ad ancoraggio su fonti reali, guardrail su input e output e un comportamento definito quando il servizio non risponde — tutto ciò che lo standard di progetto esige da un'integrazione di IA.

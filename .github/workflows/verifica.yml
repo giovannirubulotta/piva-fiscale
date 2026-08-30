@@ -89,3 +89,6 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          # Se la pipeline si ferma prima degli end-to-end il referto non esiste:
+          # è normale, non un secondo errore da segnalare.
+          if-no-files-found: ignore

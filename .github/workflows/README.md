@@ -3,24 +3,27 @@
 `verifica.yml` gira su ogni push a `main` e su ogni pull request. Tutti i passi
 sono bloccanti.
 
-## Come attivarla
+È attiva. Il repository è `giovannirubulotta/piva-fiscale`, privato, e la
+Action gira da sola a ogni push: non c'è nulla da configurare su GitHub, i due
+valori usati nel passo di build sono finti e scritti nel workflow.
 
-Il repository non ha ancora un remote. Per collegarlo:
+## Perché `typecheck` chiama `next typegen`
 
-```bash
-# 1. Crea un repository vuoto e privato su GitHub (senza README, senza .gitignore)
-# 2. Collega il remote e fai il primo push
-git remote add origin git@github.com:<utente>/piva-fiscale.git
-git push -u origin main
-```
+Next genera in `.next/types` i tipi delle rotte — `LayoutProps`, `PageProps` e
+simili — che il codice usa come se fossero globali. In locale quella cartella
+esiste da una build precedente e `tsc` la trova; su un checkout pulito no, e il
+controllo dei tipi fallisce su codice perfettamente corretto.
 
-Da quel momento la Action gira da sola: non serve configurare nulla su GitHub,
-i due segreti usati nel passo di build sono valori finti scritti nel workflow.
+Il primo giro di CI si è fermato esattamente lì. Non era un falso positivo: era
+la CI che faceva il suo mestiere, cioè verificare il codice come lo troverebbe
+un altro sviluppatore, e non come lo trova la macchina che ci ha già lavorato
+sopra. Da qui `next typegen && tsc --noEmit`: i tipi si generano prima di
+controllarli, ovunque si esegua il comando.
 
 ## Deployment e ambiente di staging
 
 Collegando lo stesso repository a Vercel (Project Settings → Git) si ottengono
-tre cose che oggi mancano:
+tre cose che al momento della scrittura mancano ancora:
 
 - **deploy tracciato**: ogni rilascio in produzione corrisponde a un commit su
   `main`, non a un comando lanciato da una shell;
@@ -34,8 +37,7 @@ Le variabili d'ambiente reali (`NEXT_PUBLIC_SUPABASE_URL`,
 
 ## Branch e rilasci
 
-Lo standard vieta modifiche dirette su `main` in un progetto in produzione. Una
-volta collegato il remote:
+Lo standard vieta modifiche dirette su `main` in un progetto in produzione:
 
 ```bash
 git switch -c feat/nome-funzionalita   # oppure fix/, refactor/, docs/
@@ -44,9 +46,9 @@ git push -u origin feat/nome-funzionalita
 # pull request: la CI gira e Vercel crea il preview deployment
 ```
 
-Il merge su `main` fa il deploy in produzione. I commit fatti finora sono su
-`main` perché il repository era locale e senza remote: da qui in avanti si passa
-dai branch.
+Il merge su `main` fa il deploy in produzione. I commit fino alla 1.0.1 sono su
+`main` perché il repository è nato locale e senza remote: da lì in avanti si
+passa dai branch.
 
 Il numero di versione in `package.json` e `CHANGELOG.md` si alza al merge:
 **MAJOR** quando cambia il calcolo delle imposte o il formato dei documenti

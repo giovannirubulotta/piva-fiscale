@@ -93,24 +93,22 @@ Non coperti: i flussi autenticati dall'interfaccia (creare un cliente, emettere
 una fattura). Richiedono un progetto Supabase di prova separato da quello reale.
 Gap annotato in `DECISIONS.md`.
 
-## Deployment
+## Repository e deployment
 
-Il deploy avviene su Vercel. Finché il repository non ha un remote git
-collegato, parte manualmente e non è tracciato:
+Il codice sta su GitHub, repository privato
+[`giovannirubulotta/piva-fiscale`](https://github.com/giovannirubulotta/piva-fiscale).
+La pipeline di verifica gira a ogni push e su ogni pull request.
+
+Il deploy avviene su Vercel e **al momento parte a mano**, quindi non è legato a
+un commit:
 
 ```bash
 npx vercel@latest deploy --prod --token=<token>
 ```
 
-Per sostituirlo con un deploy tracciato per commit, un ambiente di staging per
-ogni pull request e il rollback in un click:
-
-```bash
-./scripts/collega-repo.sh
-```
-
-Crea il repository su GitHub, fa il push e collega Vercel. È l'unico passo che
-richiede le tue credenziali. Dettagli in `.github/workflows/README.md`.
+Collegare il repository al progetto Vercel (Settings → Git) sostituisce questo
+comando con un rilascio tracciato per commit, un'anteprima per ogni pull request
+e il rollback in un click. Dettagli in `.github/workflows/README.md`.
 
 ### Migrazioni del database
 

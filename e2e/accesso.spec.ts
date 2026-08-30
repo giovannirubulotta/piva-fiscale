@@ -18,6 +18,7 @@ const ROTTE_PROTETTE = [
   "/clienti",
   "/clienti/nuovo",
   "/spese",
+  "/documenti",
   "/scadenze",
   "/f24",
   "/quadro-lm",
@@ -38,7 +39,11 @@ test.describe("perimetro di autenticazione", () => {
   }
 
   test("le API che espongono dati non rispondono senza sessione", async ({ request }) => {
-    for (const endpoint of ["/api/report?anno=2026", "/api/fatture/00000000-0000-0000-0000-000000000000/xml"]) {
+    for (const endpoint of [
+      "/api/report?anno=2026",
+      "/api/fatture/00000000-0000-0000-0000-000000000000/xml",
+      "/api/allegati/00000000-0000-0000-0000-000000000000",
+    ]) {
       // maxRedirects: 0 è la parte che conta. Seguendo il redirect si otterrebbe
       // 200 con l'HTML del login e il test passerebbe per il motivo sbagliato,
       // senza verificare nulla sul comportamento reale dell'endpoint.
@@ -58,6 +63,11 @@ test.describe("perimetro di autenticazione", () => {
     const corpoXml = await xml.text();
     expect(corpoXml).not.toContain("FatturaElettronica");
     expect(corpoXml).not.toContain("CedentePrestatore");
+
+    // Un allegato non deve mai diventare un link firmato per un anonimo: qui si
+    // verifica che la risposta non contenga un URL dello Storage.
+    const allegato = await request.get("/api/allegati/00000000-0000-0000-0000-000000000000");
+    expect(await allegato.text()).not.toContain("/storage/v1/object/sign/");
   });
 });
 

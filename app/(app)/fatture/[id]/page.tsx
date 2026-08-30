@@ -10,6 +10,7 @@ import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { StatoBadge } from "@/components/StatoBadge";
 import { Sollecito } from "@/components/Sollecito";
 import { posizioniAperte, testoSollecito } from "@/lib/domain/pagamenti";
+import { leggiAllegatiDiFattura } from "@/lib/data/allegati";
 import { cambiaStatoFattura, rimuoviFattura, segnaIncassata } from "../actions";
 import { nomeCliente } from "@/lib/domain/cliente";
 import type { DatiEmittente } from "@/lib/domain/types";
@@ -21,9 +22,10 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
   const fattura = await leggiFattura(supabase, user.id, id);
   if (!fattura) notFound();
 
-  const [cliente, emittente] = await Promise.all([
+  const [cliente, emittente, allegati] = await Promise.all([
     leggiCliente(supabase, user.id, fattura.clienteId),
     leggiDatiEmittente(supabase, user.id),
+    leggiAllegatiDiFattura(supabase, user.id, fattura.id),
   ]);
 
   const riferimento = fattura.fatturaRiferimentoId
@@ -214,6 +216,31 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
           </div>
         </details>
       )}
+
+      <div className="rounded-xl border border-line bg-surface overflow-hidden">
+        <div className="px-4 sm:px-5 py-3 border-b border-line flex items-center justify-between gap-3">
+          <span className="text-xs text-ink-muted uppercase tracking-wide">Documenti allegati</span>
+          <Link href="/documenti" className="text-xs text-accent hover:underline shrink-0">
+            Allega →
+          </Link>
+        </div>
+        {allegati.length === 0 ? (
+          <p className="px-4 sm:px-5 py-4 text-sm text-ink-muted">
+            Nessun documento allegato — contratto, ordine, ricevuta del bonifico.
+          </p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {allegati.map((allegato) => (
+              <li key={allegato.id} className="px-4 sm:px-5 py-3 text-sm">
+                <a href={`/api/allegati/${allegato.id}`} className="hover:text-accent transition break-all">
+                  {allegato.nomeFile}
+                </a>
+                {allegato.descrizione && <div className="text-xs text-ink-faint mt-0.5">{allegato.descrizione}</div>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {fattura.note && <p className="text-xs text-ink-faint">Note interne: {fattura.note}</p>}
 

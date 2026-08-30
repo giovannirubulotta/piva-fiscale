@@ -29,6 +29,7 @@ export const GRUPPI_NAV: GruppoNav[] = [
       { href: "/fatture", etichetta: "Fatture" },
       { href: "/clienti", etichetta: "Clienti" },
       { href: "/spese", etichetta: "Spese" },
+      { href: "/documenti", etichetta: "Documenti" },
     ],
   },
   {

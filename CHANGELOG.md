@@ -9,6 +9,13 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.0.2] — 2026-08-30
+
+### Modificato
+
+- Il rilascio in produzione è legato al commit su `main`: progetto Vercel collegato al repository, anteprima per ogni pull request, rollback dalla dashboard.
+- Nuovo URL di produzione: `piva-fiscale.vercel.app`. Il precedente `project-jr16d.vercel.app` sta su un altro account Vercel e va dismesso.
+
 ## [1.0.1] — 2026-08-30
 
 Prima esecuzione della pipeline su GitHub. È andata rossa, ed è stato utile:

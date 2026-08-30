@@ -30,6 +30,8 @@ L'invio telematico di fatture elettroniche richiede un canale certificato (porta
 
 La creazione di un nuovo progetto Vercel con nome scelto (`piva-fiscale` o simile) ha restituito un errore di permessi (403) nell'account/team collegato a questa sessione. È stato quindi riutilizzato un progetto Vercel preesistente dal nome generico assegnato automaticamente. Non incide sul funzionamento — l'URL pubblico (`project-jr16d.vercel.app`) è comunque stabile — ma va tenuto presente se in futuro si vorrà rinominare il progetto dal pannello Vercel (operazione che i permessi correnti non hanno permesso di fare in automatico).
 
+**Superato in fase 9.** Il 403 non era una questione di permessi ma di identità: il progetto stava su un account Vercel diverso da quello dell'utente. Ora il progetto si chiama `piva-fiscale` e risponde su `piva-fiscale.vercel.app`.
+
 ## Coefficiente di redditività derivato dal codice ATECO, con fallback esplicito
 
 `fiscale_coefficienti_ateco` mappa i prefissi ATECO (senza punti, es. `"73"`, `"4781"`) ai 9 gruppi dell'Allegato 4 L. 190/2014 (come modificato dall'art. 1 co. 87 L. 208/2015). `lib/domain/ateco.ts` cerca il prefisso più specifico (più lungo) che corrisponde al codice inserito; se nessuno corrisponde, ricade sulla voce di default (`prefisso_ateco = ''`, gruppo 9 "altre attività economiche", 67%) — che nella tabella ufficiale è già la categoria residuale, non un'approssimazione inventata qui. Solo i gruppi 1-8 sono enumerati esplicitamente (~35 prefissi): enumerare anche le ~70 divisioni del gruppo 9 sarebbe stato ridondante e più a rischio di errore di trascrizione, dato che "tutto il resto" è già la definizione del gruppo 9.
@@ -371,7 +373,7 @@ Correzione: `"typecheck": "next typegen && tsc --noEmit"`. I tipi si generano pr
 
 La lezione va oltre il caso singolo: **un comando di verifica che dipende da uno stato non versionato non sta verificando ciò che dichiara.** Vale per `.next`, varrebbe per una cache o per un file generato lasciato sul disco.
 
-### Vercel: due account distinti, decisione sospesa
+### Vercel: due account distinti, e il consolidamento sul secondo
 
 `vercel git connect` fallisce con *"You need to add a Login Connection to your GitHub account first"*. La connessione GitHub è stata aggiunta, ma il collegamento continua a fallire, e il motivo è emerso confrontando gli identificativi: il progetto `project-jr16d` appartiene all'account il cui team è `rubulottaga07-2302s-projects` — quello a cui rispondono il token e l'API — mentre il browser è autenticato come `info@giovannirubulotta.it`, che riceve 404 sullo stesso progetto. Sono **due account Vercel diversi**.
 
@@ -380,7 +382,15 @@ Da qui due strade, con costi opposti:
 1. **Accedere all'account che possiede il progetto** e collegare Git lì: conserva URL, variabili d'ambiente e accesso via API, ma richiede un'autenticazione che solo l'utente può eseguire.
 2. **Importare il repository come nuovo progetto** sull'account `info@…`: non richiede nulla all'utente e consolida tutto sull'indirizzo che usa davvero, ma cambia l'URL di produzione, impone di reinserire le variabili e **fa perdere l'accesso via token e API** al progetto, riducendo la manutenzione a ciò che si può fare da interfaccia.
 
-Non è una scelta tecnica neutra e non va presa al posto suo: la seconda opzione è più comoda oggi e più povera domani. Sospesa in attesa di risposta.
+Non era una scelta tecnica neutra e non andava presa al posto suo: la seconda opzione è più comoda oggi e più povera domani. **Scelta dall'utente: la seconda.**
+
+Esecuzione: applicazione GitHub di Vercel installata e ristretta al solo `piva-fiscale` — l'installazione propone "All repositories", che è più accesso di quanto serva; progetto `piva-fiscale` creato nel team GAR con preset Next.js; le due variabili Supabase impostate su Production e Preview.
+
+**Non su Development, deliberatamente.** Quell'ambiente alimenta `vercel dev` e `vercel env pull`, mentre lo sviluppo locale legge `.env.local`: copiarle lì significherebbe una terza copia di un segreto che nessuno legge. Un segreto in più senza un lettore in più è solo superficie d'attacco.
+
+Esito: produzione su `piva-fiscale.vercel.app`, rilascio legato al commit `main`, anteprima per ogni pull request, rollback dalla dashboard. Verificato che la radice e `/api/report` rispondano 307 verso `/login` a un anonimo — il perimetro tiene anche sul nuovo dominio.
+
+Il vecchio progetto sull'altro account resta in piedi e continua a servire `project-jr16d.vercel.app` da un commit ormai superato. Va spento, ma è una cancellazione su un account fuori dal perimetro di questa sessione: la decide e la esegue l'utente.
 
 ### Rimosso `scripts/collega-repo.sh`
 
@@ -390,5 +400,5 @@ Creava il repository e collegava Vercel. Il repository ora esiste; e lo script e
 
 1. **Flussi autenticati non coperti dagli E2E**: serve un progetto Supabase di prova.
 2. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
-3. **Deploy tracciato e ambiente di staging**: bloccati sulla scelta di account Vercel qui sopra.
-4. **Registrazioni Supabase aperte**: invariato, coinvolge l'applicazione "pratiche".
+3. **Registrazioni Supabase aperte**: invariato, coinvolge l'applicazione "pratiche".
+4. **Vecchio progetto Vercel da eliminare**: sta su un altro account, lo chiude l'utente.

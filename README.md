@@ -11,7 +11,7 @@ Entrate: produce il file XML valido, che va caricato sul portale "Fatture e
 Corrispettivi" con SPID, CIE o Fisconline — un contribuente può farlo da sé,
 senza intermediario e senza firma digitale.
 
-**URL live:** https://project-jr16d.vercel.app
+**URL live:** https://piva-fiscale.vercel.app
 
 ## Stack
 
@@ -99,16 +99,18 @@ Il codice sta su GitHub, repository privato
 [`giovannirubulotta/piva-fiscale`](https://github.com/giovannirubulotta/piva-fiscale).
 La pipeline di verifica gira a ogni push e su ogni pull request.
 
-Il deploy avviene su Vercel e **al momento parte a mano**, quindi non è legato a
-un commit:
+Il deploy avviene su Vercel, progetto `piva-fiscale` nel team GAR, collegato al
+repository: **ogni push su `main` rilascia in produzione**, ogni pull request
+riceve il suo URL di anteprima, e il rollback è un pulsante nella dashboard. Non
+si lancia più nessun comando a mano.
 
-```bash
-npx vercel@latest deploy --prod --token=<token>
-```
+Le variabili `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` vivono
+nelle Environment Variables del progetto, su Production e Preview. Non su
+Development: quell'ambiente serve a `vercel dev` e a `vercel env pull`, mentre lo
+sviluppo locale legge `.env.local`. Aggiungerle lì duplicherebbe un segreto senza
+che nulla le legga.
 
-Collegare il repository al progetto Vercel (Settings → Git) sostituisce questo
-comando con un rilascio tracciato per commit, un'anteprima per ogni pull request
-e il rollback in un click. Dettagli in `.github/workflows/README.md`.
+Dettagli sul flusso a branch in `.github/workflows/README.md`.
 
 ### Migrazioni del database
 

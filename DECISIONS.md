@@ -563,3 +563,42 @@ Nella stessa migrazione, l'indice mancante sulla chiave esterna `fiscale_attivit
 2. **Calendario** interno con dentro le scadenze fiscali, ed esportazione `.ics`.
 3. **Posta** IMAP/SMTP con credenziali cifrate.
 4. **Coerenza visiva**: un'intestazione di pagina unica, oggi ogni sezione ha la sua.
+
+## Fase 14: la catena delle quattro cause
+
+Per quasi un giorno il sito in produzione è rimasto fermo alla 1.0.2 mentre su GitHub arrivavano previsione, documenti, archivio annuale, barra di comando e CRM. La pipeline era verde a ogni push. Il codice era corretto. Il messaggio d'errore diceva un'altra cosa ancora.
+
+Vale la pena registrarlo per intero, perché il caso è istruttivo più della soluzione.
+
+### Cosa diceva l'errore, e perché era fuorviante
+
+> The deployment was blocked because the commit author did not have contributing access to the project on Vercel. The Hobby Plan does not support collaboration for private repositories. Please upgrade to Pro to add team members.
+
+Tre affermazioni, tutte tecnicamente vere e tutte irrilevanti: non c'erano collaboratori, non serviva il piano Pro, e l'autore era il titolare. Seguire il suggerimento — pagare — non avrebbe risolto nulla.
+
+### La catena, dal fondo
+
+1. **I commit erano firmati `info@netrak.fr`.** Era l'indirizzo del brand dismesso, configurato in git nell'ambiente di sviluppo. GitHub lo associa a un **secondo account, `netrakfr`**, e mostrava tutti i commit attribuiti a quell'utente: da lì, per Vercel, un contributore estraneo al progetto.
+2. **Corretto l'autore, i deploy venivano ancora annullati.** Il motivo vero compare solo aprendo la finestra di deploy manuale: *"The Deployment was canceled because it was created with an unverified commit"*. Non l'autore: la **firma**. Vercel non costruisce commit non firmati crittograficamente.
+3. **Firmati i commit con GPG, restavano «Unverified».** GitHub verifica una firma solo se l'indirizzo dentro la chiave è un indirizzo **verificato dell'account**. La chiave usava l'indirizzo `noreply`, che è attivo solo quando è accesa l'opzione *Keep my email addresses private* — che era spenta.
+4. **Acceso quell'interruttore**, GitHub ha rivalutato le firme già caricate e il commit è passato a **Verified**. La catena si è chiusa.
+
+### Cosa se ne impara
+
+**Il primo messaggio d'errore raramente nomina la causa.** Qui ne indicava una plausibile e sbagliata, con tanto di soluzione a pagamento. La causa vera stava tre livelli più in basso e in un'altra schermata. Il modo per trovarla non è stato ragionare meglio sul messaggio: è stato aprire la finestra di deploy manuale, dove Vercel dice un'altra cosa.
+
+**Ogni anello, preso da solo, sembrava la spiegazione completa.** Dopo aver corretto l'autore era ragionevole aspettarsi che funzionasse — e non funzionava. Una catena di cause si riconosce solo continuando a verificare dopo aver "risolto".
+
+**La verifica esterna non mente.** In tutto questo la pipeline era verde e il codice sano: il difetto stava interamente nella catena di fiducia tra chi scrive, chi firma e chi rilascia. Nessun test lo avrebbe mai intercettato, perché non era un difetto del software.
+
+### Gli effetti collaterali, tutti positivi
+
+- I commit ora sono **firmati**. Per un progetto che va in produzione da solo a ogni push è la difesa giusta: senza firma, chiunque ottenga un token di scrittura pubblica a nome del titolare, e la storia non conserva prova di chi abbia scritto cosa.
+- L'autore è ora l'indirizzo `noreply` dell'account: l'indirizzo reale smette di comparire nei commit.
+- Il secondo account `netrakfr` non compare più tra gli autori.
+
+I commit fino alla 1.4.0 restano non firmati e attribuiti a `netrakfr`. Rifirmarli significherebbe riscrivere la storia e cambiare tutti gli hash: non vale il rischio per un'attribuzione più ordinata su lavoro già passato.
+
+### Nota operativa
+
+La chiave privata di firma vive nell'ambiente di sviluppo, che è temporaneo. Se quell'ambiente viene ricreato, serve una chiave nuova e un nuovo caricamento su GitHub — un passaggio manuale che si ripete. È un costo noto della scelta, non una svista.

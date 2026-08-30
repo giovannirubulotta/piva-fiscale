@@ -4,7 +4,8 @@ import { leggiProfilo } from "@/lib/data/profilo";
 import { leggiAliquote } from "@/lib/data/aliquote";
 import { leggiFatture, leggiIncassiDaFatture } from "@/lib/data/fatture";
 import { leggiClienti } from "@/lib/data/clienti";
-import { numeroFattura, totaleDocumento } from "@/lib/domain/fattura";
+import { numeroFattura } from "@/lib/domain/fattura";
+import { fasceDiRitardo, posizioniAperte, totaleAperto, totaleScaduto } from "@/lib/domain/pagamenti";
 import { AndamentoFatturato, serieAnno } from "@/components/AndamentoFatturato";
 import { PrevisioneAnno } from "@/components/PrevisioneAnno";
 import { calcolaPrevisione } from "@/lib/domain/previsione";
@@ -91,10 +92,10 @@ export default async function Dashboard() {
   const soglia = valutaSoglieForfettario(fatturatoIncassatoAnno(incassi, annoCorrente));
 
   const nomiClienti = new Map(clienti.map((c) => [c.id, nomeCliente(c)]));
-  const daIncassare = fatture
-    .filter((f) => f.stato === "emessa")
-    .sort((a, b) => a.dataEmissione.localeCompare(b.dataEmissione));
-  const totaleDaIncassare = daIncassare.reduce((somma, f) => somma + totaleDocumento(f), 0);
+  const posizioni = posizioniAperte(fatture, new Date());
+  const fasce = fasceDiRitardo(posizioni);
+  const aperto = totaleAperto(posizioni);
+  const scaduto = totaleScaduto(posizioni);
 
   return (
     <div className="flex flex-col gap-8">
@@ -213,7 +214,7 @@ export default async function Dashboard() {
             Tutte le fatture →
           </Link>
         </div>
-        {daIncassare.length === 0 ? (
+        {posizioni.length === 0 ? (
           <div className="rounded-xl border border-line bg-surface px-5 py-6 text-center">
             <p className="text-sm text-ink-muted mb-3">Nessuna fattura in attesa di incasso.</p>
             <Link href="/fatture/nuova" className="text-sm text-accent hover:underline">
@@ -222,26 +223,49 @@ export default async function Dashboard() {
           </div>
         ) : (
           <div className="rounded-xl border border-line bg-surface overflow-hidden">
-            <div className="px-5 py-3 border-b border-line bg-accent-soft/40 text-sm text-accent">
-              {daIncassare.length === 1
-                ? `C'è 1 fattura da incassare per un totale di ${formattaEuro(totaleDaIncassare)}`
-                : `Ci sono ${daIncassare.length} fatture da incassare per un totale di ${formattaEuro(totaleDaIncassare)}`}
+            <div
+              className={`px-4 sm:px-5 py-3 border-b border-line text-sm ${
+                scaduto > 0 ? "bg-danger/10 text-danger" : "bg-accent-soft/40 text-accent"
+              }`}
+            >
+              {scaduto > 0
+                ? `${formattaEuro(scaduto)} scaduti su ${formattaEuro(aperto)} da incassare`
+                : `${formattaEuro(aperto)} da incassare, nulla in ritardo`}
             </div>
+
+            {/* Le fasce di anzianità stanno sopra l'elenco: oltre i 60 giorni un
+                credito cambia natura, e questa riga è ciò che lo rende visibile
+                senza dover leggere data per data. */}
+            {fasce.length > 1 && (
+              <div className="px-4 sm:px-5 py-2.5 border-b border-line flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-muted">
+                {fasce.map((f) => (
+                  <span key={f.chiave}>
+                    {f.etichetta} <span className="tabular-nums text-ink">{formattaEuro(f.totale)}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className="divide-y divide-line">
-              {daIncassare.slice(0, 5).map((f) => (
+              {posizioni.slice(0, 5).map(({ fattura, stato, giorniDiRitardo, dataScadenza, importo }) => (
                 <div
-                  key={f.id}
+                  key={fattura.id}
                   className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm"
                 >
-                  <Link href={`/fatture/${f.id}`} className="min-w-0 flex-1 hover:text-accent transition">
-                    <div className="font-medium truncate">{nomiClienti.get(f.clienteId) ?? "—"}</div>
-                    <div className="text-xs text-ink-faint">
-                      {numeroFattura(f)} · {formattaData(f.dataEmissione)}
+                  <Link href={`/fatture/${fattura.id}`} className="min-w-0 flex-1 hover:text-accent transition">
+                    <div className="font-medium truncate">{nomiClienti.get(fattura.clienteId) ?? "—"}</div>
+                    <div className="text-xs">
+                      <span className="text-ink-faint">{numeroFattura(fattura)} · </span>
+                      <span className={stato === "scaduta" ? "text-danger" : stato === "in_scadenza" ? "text-warn" : "text-ink-faint"}>
+                        {stato === "scaduta"
+                          ? `in ritardo di ${giorniDiRitardo} ${giorniDiRitardo === 1 ? "giorno" : "giorni"}`
+                          : `scade il ${formattaData(dataScadenza)}`}
+                      </span>
                     </div>
                   </Link>
-                  <div className="tabular-nums shrink-0">{formattaEuro(totaleDocumento(f))}</div>
+                  <div className="tabular-nums shrink-0">{formattaEuro(importo)}</div>
                   <form action={segnaIncassata} className="shrink-0">
-                    <input type="hidden" name="id" value={f.id} />
+                    <input type="hidden" name="id" value={fattura.id} />
                     <button type="submit" className="btn-primario text-xs px-3 py-1.5">
                       Incassa
                     </button>

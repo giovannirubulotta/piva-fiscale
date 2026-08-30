@@ -8,8 +8,11 @@ import { IMPORTO_BOLLO, dataScadenzaPagamento, numeroFattura, totaleDocumento, t
 import { validaFatturaPerXml } from "@/lib/domain/fatturaXml";
 import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { StatoBadge } from "@/components/StatoBadge";
+import { Sollecito } from "@/components/Sollecito";
+import { posizioniAperte, testoSollecito } from "@/lib/domain/pagamenti";
 import { cambiaStatoFattura, rimuoviFattura, segnaIncassata } from "../actions";
 import { nomeCliente } from "@/lib/domain/cliente";
+import type { DatiEmittente } from "@/lib/domain/types";
 
 export default async function PaginaFattura({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -42,6 +45,10 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
   const imponibile = totaleRighe(fattura.righe);
   const totale = totaleDocumento(fattura);
   const intestatario = cliente ? nomeCliente(cliente) : "—";
+  // Una sola posizione, quella di questa fattura: `posizioniAperte` scarta da sé
+  // ciò che non è un credito aperto (incassata, annullata, bozza, nota di
+  // credito), così la condizione qui non duplica quelle regole.
+  const posizione = posizioniAperte([fattura], new Date())[0] ?? null;
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -179,6 +186,35 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
+      {posizione && (
+        <details className="rounded-xl border border-line bg-surface overflow-hidden group">
+          <summary className="marker:hidden [&::-webkit-details-marker]:hidden px-4 sm:px-5 py-4 cursor-pointer select-none flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium">
+                {posizione.stato === "scaduta"
+                  ? `Scaduta da ${posizione.giorniDiRitardo} ${posizione.giorniDiRitardo === 1 ? "giorno" : "giorni"}`
+                  : posizione.stato === "in_scadenza"
+                    ? "In scadenza"
+                    : "Non ancora scaduta"}
+              </div>
+              <div className="text-xs text-ink-muted mt-0.5">
+                Scrivi al cliente — il testo lo prepari qui, l&apos;invio resta tuo
+              </div>
+            </div>
+            <span className="shrink-0 text-xs text-ink-muted border border-line rounded-lg px-3 py-1.5">
+              <span className="group-open:hidden">Prepara</span>
+              <span className="hidden group-open:inline">Chiudi</span>
+            </span>
+          </summary>
+          <div className="px-4 sm:px-5 pb-5 pt-1 border-t border-line">
+            <Sollecito
+              oggetto={`Fattura ${numeroFattura(fattura)} — ${formattaEuro(totale)}`}
+              testo={testoSollecito(posizione, intestatario, firmaEmittente(emittente))}
+            />
+          </div>
+        </details>
+      )}
+
       {fattura.note && <p className="text-xs text-ink-faint">Note interne: {fattura.note}</p>}
 
       <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-line">
@@ -200,4 +236,14 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
       </div>
     </div>
   );
+}
+
+/**
+ * Come si firma il sollecito. L'anagrafica dell'emittente può essere ancora
+ * incompleta: in quel caso è meglio una firma vuota, che si nota e si corregge,
+ * di un segnaposto tipo "Il fornitore" che rischia di partire così com'è.
+ */
+function firmaEmittente(emittente: DatiEmittente | null): string {
+  if (!emittente) return "";
+  return [emittente.nome, emittente.cognome].filter(Boolean).join(" ");
 }

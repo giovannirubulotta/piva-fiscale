@@ -82,3 +82,32 @@ commit significa cambiarne tutti gli hash, costringere ogni copia locale a un
 un'attribuzione più ordinata su commit già passati. La correzione vale da qui in
 avanti; se un giorno servisse anche per il passato, si fa con `git filter-repo` e
 una `.mailmap`, sapendo cosa costa.
+
+## Commit firmati
+
+Vercel annulla i deploy creati da un commit non verificato:
+
+> The Deployment was canceled because it was created with an unverified commit
+
+È una protezione ragionevole per un progetto che va in produzione da solo a ogni
+push: senza firma, chiunque ottenga un token con permesso di scrittura può
+mandare codice in produzione a nome tuo, e la storia non conserva alcuna prova
+di chi l'abbia scritto davvero.
+
+I commit sono quindi firmati con una chiave GPG il cui indirizzo è quello
+`noreply` dell'account, così GitHub li marca **Verified**:
+
+```bash
+git config user.signingkey <ID-CHIAVE>
+git config commit.gpgsign true
+```
+
+La chiave pubblica va aggiunta una volta su GitHub, in *Settings → SSH and GPG
+keys → New GPG key*. La chiave privata resta nell'ambiente in cui si scrive il
+codice e non entra mai nel repository.
+
+I commit precedenti restano non firmati: rifirmarli significherebbe riscrivere
+la storia e cambiare tutti gli hash. Per portare in produzione un commit già
+esistente e non firmato, si usa *Deployments → … → Create Deployment* dalla
+dashboard Vercel, che è un'azione del titolare e non passa dal controllo sulla
+firma.

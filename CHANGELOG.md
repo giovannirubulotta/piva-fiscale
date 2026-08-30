@@ -9,6 +9,21 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.0.1] — 2026-08-30
+
+Prima esecuzione della pipeline su GitHub. È andata rossa, ed è stato utile:
+`npm run typecheck` passava in locale solo perché la cartella `.next` era già
+popolata da una build precedente.
+
+### Corretto
+
+- `typecheck` genera i tipi delle rotte (`next typegen`) prima di controllarli: su un checkout pulito, senza `.next`, `tsc` non trovava `LayoutProps` e bocciava codice corretto.
+- Il caricamento del referto Playwright non segnala più un errore quando la pipeline si ferma prima degli end-to-end e il referto non esiste.
+
+### Rimosso
+
+- `scripts/collega-repo.sh`: creava il repository e lo collegava a Vercel. Il repository ora esiste, e lo script era comunque ineseguibile sulla macchina di destinazione, che è Windows.
+
 ## [1.0.0] — 2026-08-29
 
 Prima versione considerata completa: emette documenti fiscalmente validi, non

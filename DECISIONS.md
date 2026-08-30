@@ -348,3 +348,47 @@ Registrato qui perché è il tipo di azione che sembra un miglioramento finché 
 1. **Flussi autenticati non coperti dagli E2E**: serve un progetto Supabase di prova. Crearne uno ha un costo e tocca il suo account.
 2. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
 3. **Ambiente di staging**: si attiva con il punto 1 della lista sopra.
+
+## Fase 9: repository, prima CI, e cosa ha rivelato
+
+### Il push non è partito da qui, e non per il token
+
+Il repository `giovannirubulotta/piva-fiscale` esiste, è privato e contiene i 28 commit. Non sono stati caricati dall'ambiente in cui è stato scritto il codice: il proxy git di quella sessione inietta credenziali solo per i repository dichiarati al suo avvio e rifiuta tutto il resto — `access denied by the git proxy` — così come l'API `POST /user/repos` e `GET /repos/{owner}/{repo}`. Nessun token lo aggira, perché la barriera è di rete, non di autorizzazione.
+
+Il percorso effettivo: `git bundle` dell'intera storia (297 KB), scritto sul PC dell'utente, ricostruito lì con `git clone` e caricato da lì. Due tentativi intermedi sono falliti per ragioni istruttive: il credential helper `store --file=` non veniva interrogato perché **Credential Manager, configurato a livello di sistema, risponde per primo** e vince; e la lista dei helper si estende, non si sostituisce, quindi `-c credential.helper=vuoto` va passato prima per azzerarla. Ha funzionato solo mettendo le credenziali nell'URL.
+
+Conseguenza operativa da tenere presente: **ogni modifica prodotta in ambiente automatico va portata su GitHub passando dalla macchina dell'utente.** Non è un dettaglio di questa sessione, è il vincolo del canale.
+
+### La prima CI è andata rossa, ed era giusto così
+
+`app/layout.tsx#L29 — Cannot find name 'LayoutProps'`. In locale `npm run typecheck` passava; su un checkout pulito no.
+
+`LayoutProps` e affini non sono tipi scritti da noi né importati: Next li **genera** in `.next/types`. Sulla macchina di sviluppo quella cartella esisteva da una build precedente, quindi `tsc` li trovava. In CI, dove il checkout è pulito e il typecheck precede la build, non esistevano.
+
+Il controllo non era falso: era **verde per il motivo sbagliato**, cioè per uno stato residuo del disco e non per una proprietà del codice. È esattamente la classe di errore che la CI esiste per intercettare, e l'ha intercettata al primo giro.
+
+Correzione: `"typecheck": "next typegen && tsc --noEmit"`. I tipi si generano prima di controllarli, ovunque si esegua il comando. Verificato ricostruendo la condizione della CI — `rm -rf .next` seguito dalla suite completa: 136 test di dominio e 46 end-to-end verdi.
+
+La lezione va oltre il caso singolo: **un comando di verifica che dipende da uno stato non versionato non sta verificando ciò che dichiara.** Vale per `.next`, varrebbe per una cache o per un file generato lasciato sul disco.
+
+### Vercel: due account distinti, decisione sospesa
+
+`vercel git connect` fallisce con *"You need to add a Login Connection to your GitHub account first"*. La connessione GitHub è stata aggiunta, ma il collegamento continua a fallire, e il motivo è emerso confrontando gli identificativi: il progetto `project-jr16d` appartiene all'account il cui team è `rubulottaga07-2302s-projects` — quello a cui rispondono il token e l'API — mentre il browser è autenticato come `info@giovannirubulotta.it`, che riceve 404 sullo stesso progetto. Sono **due account Vercel diversi**.
+
+Da qui due strade, con costi opposti:
+
+1. **Accedere all'account che possiede il progetto** e collegare Git lì: conserva URL, variabili d'ambiente e accesso via API, ma richiede un'autenticazione che solo l'utente può eseguire.
+2. **Importare il repository come nuovo progetto** sull'account `info@…`: non richiede nulla all'utente e consolida tutto sull'indirizzo che usa davvero, ma cambia l'URL di produzione, impone di reinserire le variabili e **fa perdere l'accesso via token e API** al progetto, riducendo la manutenzione a ciò che si può fare da interfaccia.
+
+Non è una scelta tecnica neutra e non va presa al posto suo: la seconda opzione è più comoda oggi e più povera domani. Sospesa in attesa di risposta.
+
+### Rimosso `scripts/collega-repo.sh`
+
+Creava il repository e collegava Vercel. Il repository ora esiste; e lo script era comunque ineseguibile sulla macchina di destinazione, che è Windows — un difetto che nessuno avrebbe scoperto finché non fosse servito. Codice morto, eliminato invece che conservato "per sicurezza".
+
+### Gap ancora aperti
+
+1. **Flussi autenticati non coperti dagli E2E**: serve un progetto Supabase di prova.
+2. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
+3. **Deploy tracciato e ambiente di staging**: bloccati sulla scelta di account Vercel qui sopra.
+4. **Registrazioni Supabase aperte**: invariato, coinvolge l'applicazione "pratiche".

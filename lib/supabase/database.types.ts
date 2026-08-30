@@ -350,6 +350,119 @@ export type Database = {
           },
         ]
       }
+      fiscale_attivita: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data: string
+          data_prossimo_passo: string | null
+          fatto: boolean
+          id: string
+          prossimo_passo: string | null
+          testo: string
+          tipo: string
+          trattativa_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data?: string
+          data_prossimo_passo?: string | null
+          fatto?: boolean
+          id?: string
+          prossimo_passo?: string | null
+          testo: string
+          tipo?: string
+          trattativa_id?: string | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data?: string
+          data_prossimo_passo?: string | null
+          fatto?: boolean
+          id?: string
+          prossimo_passo?: string | null
+          testo?: string
+          tipo?: string
+          trattativa_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_attivita_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_attivita_trattativa_id_fkey"
+            columns: ["trattativa_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_trattative"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscale_trattative: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_chiusura: string | null
+          data_prevista: string | null
+          fase: string
+          id: string
+          motivo_chiusura: string | null
+          note: string | null
+          probabilita: number
+          titolo: string
+          updated_at: string
+          user_id: string
+          valore_stimato: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_chiusura?: string | null
+          data_prevista?: string | null
+          fase?: string
+          id?: string
+          motivo_chiusura?: string | null
+          note?: string | null
+          probabilita?: number
+          titolo: string
+          updated_at?: string
+          user_id: string
+          valore_stimato?: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_chiusura?: string | null
+          data_prevista?: string | null
+          fase?: string
+          id?: string
+          motivo_chiusura?: string | null
+          note?: string | null
+          probabilita?: number
+          titolo?: string
+          updated_at?: string
+          user_id?: string
+          valore_stimato?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_trattative_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscale_clienti: {
         Row: {
           cap: string | null

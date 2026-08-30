@@ -9,6 +9,21 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.3.0] — 2026-08-30
+
+Prima fetta della trasformazione da applicazione fiscale a strumento di lavoro:
+l'impalcatura. I moduli (CRM, note, calendario, posta) arrivano dentro questa.
+
+### Aggiunto
+
+- **Barra di comando** con ⌘K / Ctrl+K: cerca tra clienti, documenti, archivio e spese, e apre le azioni frequenti. Costruita su `<dialog>` nativo, quindi con trappola del fuoco, Esc e sfondo inerte gestiti dal browser.
+- **Ricerca trasversale** lato server, con le policy RLS attive: nessun indice di dati fiscali viene spedito al browser.
+- Barra fissa in alto su desktop con ricerca e azione primaria.
+
+### Modificato
+
+- L'area di lavoro è più larga (da 4xl a 5xl) e il nome nell'intestazione è "GAR Studio": l'applicazione non è più solo la fiscalità.
+
 ## [1.2.0] — 2026-08-30
 
 ### Aggiunto

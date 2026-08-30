@@ -484,3 +484,41 @@ Eseguito dopo le migrazioni: nessun rilievo sulle tabelle `fiscale_*` né sul nu
 2. **Flussi autenticati non coperti dagli end-to-end**: serve un progetto Supabase di prova.
 3. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
 4. Registrazioni Supabase aperte e vecchio progetto Vercel: invariati.
+
+## Fase 12: da applicazione fiscale a strumento di lavoro
+
+Richiesta: un software di organizzazione aziendale — CRM, note, calendario, posta collegata — con la fiscalità dentro, e l'aspetto di un software professionale. È lavoro da più sessioni, costruito a fette verificate e rilasciate una alla volta.
+
+### Tre scelte prese dall'utente, non da me
+
+1. **Posta via IMAP/SMTP con password dedicata**, non OAuth. Gli ho detto i limiti prima di chiedere: la password della casella va conservata cifrata, IMAP su funzioni serverless è fragile e non dà notifiche in tempo reale. Ha scelto consapevolmente la strada che funziona con qualsiasi provider. Quando arriverà quel modulo, la password sarà cifrata a riposo e va detto con precisione **cosa resta esposto**: chiave e testo cifrato vivono sulla stessa piattaforma, quindi si protegge dal furto del database, non da chi ha accesso al progetto.
+2. **Calendario interno con esportazione `.ics`**, nessuna sincronizzazione. Niente OAuth, niente consensi, ma il calendario del telefono non si aggiorna da sé.
+3. **Prima l'impalcatura, poi i moduli.**
+
+### Perché l'impalcatura per prima
+
+Costruire il CRM dentro la struttura attuale avrebbe significato aggiungere una quinta voce a un menu, cioè un'altra pagina in un insieme di pagine. La differenza tra un insieme di pagine e un software sta in due cose: **si arriva ovunque senza sapere dove sta**, e le azioni frequenti costano un gesto. La barra di comando è entrambe.
+
+`<dialog>` nativo invece di un div con `role="dialog"`: trappola del fuoco, chiusura con Esc, sfondo inerte e gestione dello stack arrivano dal browser. Riscriverli a mano significa riscriverli peggio, ed è la stessa ragione per cui `InfoCampo` e il menu mobile usano `<details>`.
+
+I risultati sono `Link` e non `button` con `router.push`: click centrale, ctrl+click e "apri in una nuova scheda" funzionano perché sono ancore vere. Un elenco di risultati che non si può aprire in una scheda nuova è una finta lista di link.
+
+### La ricerca sanifica in un punto solo
+
+`%` e `_` sono jolly in `like`, e la virgola separa le condizioni dentro `or()` di PostgREST. Lasciarle passare significa che chi cerca "50% acconto, saldo" ottiene una query diversa da quella scritta: nel caso migliore zero risultati, nel peggiore un filtro malformato. La ripulitura sta in una funzione sola, testata, invece che ripetuta in ognuna delle quattro interrogazioni — dove prima o poi ne mancherebbe una.
+
+Quattro `select` in parallelo e non una vista SQL unificata: le tabelle hanno colonne diverse e una `union` costringerebbe a inventare un formato comune che nessuna delle quattro usa. Costa un round-trip, resta leggibile.
+
+Un termine numerico ("12", "12/2026") cerca il progressivo di una fattura, non un testo nelle note — ma solo se somiglia davvero a un numero: un `ilike` su una colonna intera finirebbe in un cast e in un errore.
+
+### Regole del compilatore React rispettate, non aggirate
+
+Il linter ha bocciato due cose. La prima, `setState` dentro un effetto per azzerare i risultati sotto la soglia: risolta **derivando** il valore invece di memorizzarlo — uno stato calcolabile non va conservato. La seconda, un ref letto da una funzione passata durante il render: risolta passando gli handler per riferimento e trasformando i risultati in `Link`. In entrambi i casi il codice è migliorato; disattivare la regola sarebbe stato più corto e peggiore.
+
+### Cosa arriva nelle prossime fette
+
+1. **CRM**: clienti come entità vere — trattative, attività, storico, valore collegato alle fatture.
+2. **Note** collegate a clienti e pratiche.
+3. **Calendario** interno con le scadenze fiscali già dentro ed esportazione `.ics`.
+4. **Posta** IMAP/SMTP con credenziali cifrate.
+5. **Coerenza visiva**: un'intestazione di pagina unica su tutte le sezioni, oggi ognuna ha la sua.

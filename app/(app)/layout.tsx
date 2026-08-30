@@ -40,10 +40,10 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <MenuCompleto compatto />
           <div className="mt-3 pt-3 border-t border-line flex flex-col gap-0.5">
             <a
-              href={`/api/report?anno=${annoCorrente}`}
+              href={`/api/esportazione?anno=${annoCorrente}`}
               className="rounded-lg px-3 py-2.5 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
             >
-              Esporta CSV {annoCorrente}
+              Archivio {annoCorrente} (.zip)
             </a>
             <div className="flex items-center justify-between gap-2 pt-2">
               <span className="px-3 text-xs text-ink-faint truncate">{user?.email}</span>
@@ -69,10 +69,10 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
         <nav aria-label="Navigazione principale" className="flex-1 px-3 py-4 overflow-y-auto">
           <MenuCompleto />
           <a
-            href={`/api/report?anno=${annoCorrente}`}
+            href={`/api/esportazione?anno=${annoCorrente}`}
             className="mt-4 block rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-2 transition"
           >
-            Esporta CSV {annoCorrente}
+            Archivio {annoCorrente} (.zip)
           </a>
         </nav>
         <div className="px-3 py-4 border-t border-line">

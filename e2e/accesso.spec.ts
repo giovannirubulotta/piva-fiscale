@@ -43,6 +43,7 @@ test.describe("perimetro di autenticazione", () => {
       "/api/report?anno=2026",
       "/api/fatture/00000000-0000-0000-0000-000000000000/xml",
       "/api/allegati/00000000-0000-0000-0000-000000000000",
+      "/api/esportazione?anno=2026",
     ]) {
       // maxRedirects: 0 è la parte che conta. Seguendo il redirect si otterrebbe
       // 200 con l'HTML del login e il test passerebbe per il motivo sbagliato,
@@ -68,6 +69,13 @@ test.describe("perimetro di autenticazione", () => {
     // verifica che la risposta non contenga un URL dello Storage.
     const allegato = await request.get("/api/allegati/00000000-0000-0000-0000-000000000000");
     expect(await allegato.text()).not.toContain("/storage/v1/object/sign/");
+
+    // L'archivio annuale contiene tutto l'anno fiscale: se uscisse a un anonimo
+    // sarebbe la fuga di dati piu' grande possibile in questa applicazione.
+    const archivio = await request.get("/api/esportazione?anno=2026");
+    const corpoArchivio = await archivio.text();
+    expect(corpoArchivio).not.toContain("PK");
+    expect(corpoArchivio).not.toContain("Archivio fiscale");
   });
 });
 

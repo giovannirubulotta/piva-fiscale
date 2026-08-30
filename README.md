@@ -2,9 +2,10 @@
 
 Applicazione web personale per la gestione della partita IVA in regime
 forfettario: fatturazione elettronica con generazione del file XML per il
-Sistema di Interscambio, anagrafica clienti, calcolo di imposta sostitutiva e
-contributi INPS Gestione Separata, scadenzario, generatore F24, riepilogo del
-Quadro LM e base di conoscenza normativa consultabile.
+Sistema di Interscambio, anagrafica clienti, previsione di chiusura dell'anno,
+stato di incasso e solleciti, calcolo di imposta sostitutiva e contributi INPS
+Gestione Separata, scadenzario, generatore F24, riepilogo del Quadro LM e base
+di conoscenza normativa consultabile.
 
 Uso strettamente personale, single-user. Non trasmette nulla all'Agenzia delle
 Entrate: produce il file XML valido, che va caricato sul portale "Fatture e
@@ -78,9 +79,10 @@ Tutti bloccanti, tutti in CI (`.github/workflows/verifica.yml`).
 
 ### Cosa è coperto dai test
 
-**Dominio** (136 test): calcolo di imposta e contributi, soglie e cause di
-esclusione dal forfettario, scadenzario, righe F24, Quadro LM, totali di fattura
-e generazione dell'XML. Sei esemplari di XML sono validati contro lo schema XSD
+**Dominio** (173 test): calcolo di imposta e contributi, previsione di fine
+anno, stato di incasso e testo dei solleciti, soglie e cause di esclusione dal
+forfettario, scadenzario, righe F24, Quadro LM, totali di fattura e generazione
+dell'XML. Sei esemplari di XML sono validati contro lo schema XSD
 ufficiale in `schema/` — struttura, ordine degli elementi, tipi e pattern; i
 limiti di quella validazione sono descritti nell'intestazione di
 `lib/domain/fatturaXml.xsd.test.ts`.

@@ -83,10 +83,33 @@ e contenitori, `rounded-full` per le pastiglie di stato.
 | `InfoCampo` | `components/InfoCampo.tsx` | Etichetta con pulsante "ⓘ": cos'è il dato, dove si trova, riferimento normativo |
 | `StatoBadge` | `components/StatoBadge.tsx` | Stato di un documento, colore dal token semantico |
 | `AndamentoFatturato` | `components/AndamentoFatturato.tsx` | SVG inline, nessuna libreria di charting |
+| `PrevisioneAnno` | `components/PrevisioneAnno.tsx` | Numero grande + barra composita in HTML: incassato, emesso, atteso |
+| `MenuCompleto` / `BarraInferiore` | `components/NavPrincipale.tsx` | Navigazione raggruppata con stato attivo; barra inferiore su mobile |
+| `Sollecito` | `components/Sollecito.tsx` | Testo modificabile e copiabile; non invia nulla |
 
-`InfoCampo` e la barra di navigazione mobile usano `<details>`/`<summary>`
-nativi invece di stato React: funzionano da tastiera e con screen reader senza
-ARIA aggiuntiva, e non richiedono `"use client"`.
+`InfoCampo`, il menu mobile e il pannello del sollecito usano
+`<details>`/`<summary>` nativi invece di stato React: funzionano da tastiera e
+con screen reader senza ARIA aggiuntiva, e non richiedono `"use client"`. I due
+componenti di navigazione sono invece client per una ragione sola — sapere in
+quale sezione ci si trova — e i solleciti perché l'accesso agli appunti richiede
+il browser.
+
+## Navigazione
+
+Il menu è raggruppato: **Lavoro**, **Fisco**, **Impostazioni**, con la dashboard
+fuori da ogni gruppo. Quattordici voci in un elenco piatto si leggono una per
+una ogni volta; quattro gruppi si scorrono. La voce della pagina corrente porta
+`aria-current="page"` e lo sfondo dell'accento, e resta evidenziata anche sulle
+pagine figlie: da `/fatture/nuova` deve essere ancora chiaro di essere dentro
+Fatture.
+
+Su mobile le quattro destinazioni quotidiane — Home, Fatture, Spese, Scadenze —
+stanno in una barra fissa in basso, dove il pollice arriva senza cambiare presa;
+tutto il resto sta dietro «Altro» in alto, che costa un tocco in più ed è la
+scelta giusta per ciò che si apre una volta al mese. Quattro e non otto: ogni
+voce in più rimpicciolisce i bersagli sotto i 44px. La mappa è definita una sola
+volta in `lib/ui/navigazione.ts`, e un test verifica che ogni voce della barra
+inferiore esista anche nel menu completo.
 
 ## Adattamento a schermo piccolo
 

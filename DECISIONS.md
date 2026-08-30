@@ -402,3 +402,44 @@ Creava il repository e collegava Vercel. Il repository ora esiste; e lo script e
 2. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
 3. **Registrazioni Supabase aperte**: invariato, coinvolge l'applicazione "pratiche".
 4. **Vecchio progetto Vercel da eliminare**: sta su un altro account, lo chiude l'utente.
+
+## Fase 10: previsione, crediti e navigazione
+
+Richiesta: completare le funzioni che mancavano e alzare l'interfaccia. Le due cose si sono rivelate la stessa: ciò che mancava non era una schermata in più, ma il fatto che due domande quotidiane — *dove finirà l'anno* e *chi non ha pagato* — non avessero risposta da nessuna parte.
+
+### Previsione: due scenari, nessuno eletto
+
+Una previsione mostrata come numero singolo viene letta come un dato. Per questo il modulo ne produce due, e la loro distanza è essa stessa informazione: **prudente** (solo incassato più fatture già emesse, nessun nuovo lavoro presunto) e **al ritmo attuale** (l'incassato proiettato sui giorni che restano). Il numero grande sulla dashboard è quello prudente, perché un accantonamento si dimensiona su ciò che è certo; l'altro sta accanto, con l'ipotesi scritta per esteso.
+
+Tre vincoli che non sono dettagli:
+
+1. **Sotto i 45 giorni di attività non si proietta.** Un bonifico incassato il 20 gennaio, diviso per venti giorni e moltiplicato per 365, produce una proiezione a sei cifre e un falso allarme di uscita dal regime forfettario. Il freno è esplicito e dichiarato nell'interfaccia.
+2. **Il ritmo non scende mai sotto il prudente**, altrimenti esisterebbe uno scenario in cui il lavoro già fatturato smette di esistere.
+3. **Nell'anno di apertura si proietta dalla data di apertura**, non dal 1° gennaio: dividere per mesi in cui la partita IVA non c'era sottostima il ritmo di un terzo o più.
+
+Il calcolo fiscale non è stato riscritto: `calcolaRiepilogoAnno` è stato scomposto in `riepilogoDaFatturato`, che la previsione riusa tale e quale. Duplicarlo avrebbe creato due punti in cui cambiare un'aliquota, e la previsione avrebbe finito per mostrare numeri plausibili e sbagliati — il modo peggiore di sbagliare, perché non si nota.
+
+### Crediti: le fasce contano più del totale
+
+Il totale da incassare da solo non dice niente di utile. Le fasce sì: entro 30 giorni è un ritardo fisiologico, oltre i 60 è un problema di natura diversa, che si affronta in un altro modo. Separarle è ciò che permette di accorgersene senza leggere data per data.
+
+Il sollecito si **prepara**, non si invia. Mandare messaggi a nome dell'utente è una decisione, non un effetto collaterale dell'apertura di una pagina — e un invio automatico su un canale non configurato sarebbe stato anche la strada più corta per un errore silenzioso. Il testo cambia tono con il ritardo ma resta cortese anche a novanta giorni: chi scrive vuole essere pagato *e* mantenere il cliente. Nessun riferimento agli interessi di mora, che pure sono dovuti per legge (D.Lgs. 231/2002): citarli è una scelta commerciale e va fatta caso per caso, non inserita di default in ogni promemoria. Un test lo verifica, perché è il genere di frase che rientra da sola in una revisione distratta.
+
+### Il dominio non importa da `lib/ui`
+
+`testoSollecito` deve formattare un importo in euro, e `formattaEuro` esiste già in `lib/ui/format`. Importarlo avrebbe invertito la direzione delle dipendenze — il dominio che dipende dalla presentazione — per risparmiare tre righe. C'è invece un formattatore locale, con il motivo scritto sopra. È duplicazione, ed è giustificata: la regola sull'estrazione alla terza occorrenza vale dentro uno strato, non attraverso il confine che tiene in piedi l'architettura.
+
+### Navigazione: raggruppata, con lo stato attivo
+
+Quattordici voci in un elenco piatto, nessuna evidenza della pagina corrente. Ora quattro gruppi e `aria-current="page"` sulla voce attiva, che resta evidenziata anche sulle pagine figlie: da `/fatture/nuova` deve essere ancora chiaro di essere dentro Fatture.
+
+Su mobile le quattro destinazioni quotidiane stanno in una barra fissa in basso. Quattro e non otto: la barra vive nella zona che il pollice raggiunge senza cambiare presa, e ogni voce in più porta i bersagli sotto i 44px. Il resto sta dietro «Altro», che costa un tocco in più ed è la scelta giusta per ciò che si apre una volta al mese. Un test verifica che ogni voce della barra esista anche nel menu completo — è il tipo di disallineamento che nessuno nota finché non manca una pagina.
+
+I due componenti di navigazione sono client (`usePathname`) per una ragione sola: sapere dove ci si trova. Il costo è misurato — il performance budget è passato da 725 a 727 KB su 900 — e comprato consapevolmente.
+
+### Cosa resta da fare
+
+1. **Archivio documenti con allegati**: richiede una tabella nuova, un bucket Supabase Storage e le relative policy. Non iniziato.
+2. **Promemoria sulle scadenze fuori dall'applicazione** (calendario o email): richiede un canale di invio, quindi una decisione su un servizio terzo e sul suo costo.
+3. **Esportazione per il commercialista**: un archivio con gli XML dell'anno e il riepilogo, oggi c'è solo il CSV.
+4. I gap delle fasi precedenti restano invariati.

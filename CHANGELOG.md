@@ -9,6 +9,22 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.1.0] — 2026-08-30
+
+Due cose che mancavano e che si sentono ogni mese: sapere dove finirà l'anno, e
+sapere chi non ha pagato.
+
+### Aggiunto
+
+- **Previsione di chiusura dell'anno** in cima alla dashboard, con due scenari dichiarati — prudente (solo incassato più emesso) e al ritmo attuale — e la composizione del fatturato previsto. Non elegge uno scenario: la forbice tra i due è l'informazione. Sotto i 45 giorni di attività non proietta, e nell'anno di apertura parte dalla data di apertura invece che dal 1° gennaio.
+- **Stato di incasso delle fatture**: scadenza, giorni di ritardo, fasce di anzianità (entro 30, entro 60, oltre 60) e scaduto in evidenza sulla dashboard.
+- **Sollecito pronto da copiare** sulla pagina della fattura, con tono proporzionato al ritardo. Si prepara e si modifica; l'invio resta dell'utente.
+- **Barra inferiore su mobile** con le quattro destinazioni quotidiane, nella zona raggiungibile dal pollice.
+
+### Modificato
+
+- Il menu è raggruppato in Lavoro, Fisco e Impostazioni, e la voce della pagina corrente è evidenziata: quattordici voci indistinte costringevano a rileggere il titolo per sapere dove si era.
+
 ## [1.0.2] — 2026-08-30
 
 ### Modificato

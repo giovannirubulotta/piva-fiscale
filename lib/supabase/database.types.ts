@@ -221,6 +221,155 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscale_listino: {
+        Row: {
+          attivo: boolean
+          categoria: string | null
+          created_at: string
+          descrizione: string
+          id: string
+          note: string | null
+          prezzo_unitario: number
+          unita_misura: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attivo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descrizione: string
+          id?: string
+          note?: string | null
+          prezzo_unitario: number
+          unita_misura?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attivo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descrizione?: string
+          id?: string
+          note?: string | null
+          prezzo_unitario?: number
+          unita_misura?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fiscale_preventivi: {
+        Row: {
+          anno: number
+          cliente_id: string
+          condizioni: string | null
+          created_at: string
+          data_emissione: string
+          fattura_id: string | null
+          id: string
+          note: string | null
+          oggetto: string | null
+          progressivo: number
+          stato: string
+          updated_at: string
+          user_id: string
+          valido_fino_al: string
+        }
+        Insert: {
+          anno: number
+          cliente_id: string
+          condizioni?: string | null
+          created_at?: string
+          data_emissione?: string
+          fattura_id?: string | null
+          id?: string
+          note?: string | null
+          oggetto?: string | null
+          progressivo: number
+          stato?: string
+          updated_at?: string
+          user_id: string
+          valido_fino_al: string
+        }
+        Update: {
+          anno?: number
+          cliente_id?: string
+          condizioni?: string | null
+          created_at?: string
+          data_emissione?: string
+          fattura_id?: string | null
+          id?: string
+          note?: string | null
+          oggetto?: string | null
+          progressivo?: number
+          stato?: string
+          updated_at?: string
+          user_id?: string
+          valido_fino_al?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_preventivi_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_preventivi_fattura_id_fkey"
+            columns: ["fattura_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscale_preventivo_righe: {
+        Row: {
+          created_at: string
+          descrizione: string
+          id: string
+          numero_linea: number
+          preventivo_id: string
+          prezzo_unitario: number
+          quantita: number
+          unita_misura: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descrizione: string
+          id?: string
+          numero_linea: number
+          preventivo_id: string
+          prezzo_unitario: number
+          quantita?: number
+          unita_misura?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descrizione?: string
+          id?: string
+          numero_linea?: number
+          preventivo_id?: string
+          prezzo_unitario?: number
+          quantita?: number
+          unita_misura?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_preventivo_righe_preventivo_id_fkey"
+            columns: ["preventivo_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_preventivi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscale_log_errori: {
         Row: {
           created_at: string

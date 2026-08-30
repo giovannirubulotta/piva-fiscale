@@ -13,6 +13,7 @@ import { test, expect } from "@playwright/test";
 /** Ogni rotta che mostra o modifica dati fiscali. L'elenco va tenuto allineato al menu. */
 const ROTTE_PROTETTE = [
   "/",
+  "/crm",
   "/fatture",
   "/fatture/nuova",
   "/clienti",

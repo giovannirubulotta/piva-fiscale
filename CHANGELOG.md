@@ -9,6 +9,18 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.2.0] — 2026-08-30
+
+### Aggiunto
+
+- **Archivio documenti**: ricevute, contratti, quietanze F24 e Certificazioni Uniche, con collegamento facoltativo a una fattura o a una spesa. I file stanno in uno spazio privato e si aprono con un link firmato che scade dopo un minuto.
+- **Archivio annuale per il commercialista** (`.zip`): CSV di fatture e spese, riepilogo dei numeri dell'anno e gli XML già trasmessi allo SDI. Le fatture senza numero di trasmissione non vengono ricostruite e sono elencate nel LEGGIMI.
+- Gli allegati di una fattura compaiono sulla pagina della fattura.
+
+### Modificato
+
+- La voce "Esporta CSV" del menu è diventata "Archivio (.zip)": contiene lo stesso CSV e molto altro.
+
 ## [1.1.0] — 2026-08-30
 
 Due cose che mancavano e che si sentono ogni mese: sapere dove finirà l'anno, e

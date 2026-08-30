@@ -3,9 +3,10 @@
 Applicazione web personale per la gestione della partita IVA in regime
 forfettario: fatturazione elettronica con generazione del file XML per il
 Sistema di Interscambio, anagrafica clienti, previsione di chiusura dell'anno,
-stato di incasso e solleciti, calcolo di imposta sostitutiva e contributi INPS
-Gestione Separata, scadenzario, generatore F24, riepilogo del Quadro LM e base
-di conoscenza normativa consultabile.
+stato di incasso e solleciti, archivio documenti, calcolo di imposta sostitutiva
+e contributi INPS Gestione Separata, scadenzario, generatore F24, riepilogo del
+Quadro LM, archivio annuale per il commercialista e base di conoscenza normativa
+consultabile.
 
 Uso strettamente personale, single-user. Non trasmette nulla all'Agenzia delle
 Entrate: produce il file XML valido, che va caricato sul portale "Fatture e
@@ -79,15 +80,15 @@ Tutti bloccanti, tutti in CI (`.github/workflows/verifica.yml`).
 
 ### Cosa è coperto dai test
 
-**Dominio** (173 test): calcolo di imposta e contributi, previsione di fine
+**Dominio** (178 test): calcolo di imposta e contributi, previsione di fine
 anno, stato di incasso e testo dei solleciti, soglie e cause di esclusione dal
-forfettario, scadenzario, righe F24, Quadro LM, totali di fattura e generazione
-dell'XML. Sei esemplari di XML sono validati contro lo schema XSD
+forfettario, scadenzario, righe F24, Quadro LM, totali di fattura, generazione
+dell'XML e scrittura dell'archivio ZIP. Sei esemplari di XML sono validati contro lo schema XSD
 ufficiale in `schema/` — struttura, ordine degli elementi, tipi e pattern; i
 limiti di quella validazione sono descritti nell'intestazione di
 `lib/domain/fatturaXml.xsd.test.ts`.
 
-**End-to-end** (46 test, desktop e mobile): perimetro di autenticazione su tutte
+**End-to-end** (48 test, desktop e mobile): perimetro di autenticazione su tutte
 le rotte, API che non devono restituire dati a un anonimo, pagina di accesso,
 accessibilità di base.
 
@@ -113,6 +114,15 @@ sviluppo locale legge `.env.local`. Aggiungerle lì duplicherebbe un segreto sen
 che nulla le legga.
 
 Dettagli sul flusso a branch in `.github/workflows/README.md`.
+
+### File e allegati
+
+I documenti caricati stanno nel bucket privato `fiscale-allegati` di Supabase
+Storage, mai in un bucket pubblico: contengono dati personali propri e di terzi.
+Il percorso di ogni oggetto comincia con l'id dell'utente, ed è su quel primo
+segmento che si appoggiano le policy dello Storage — cambiarlo significa perdere
+l'isolamento, non riordinare le cartelle. I file si servono solo con link
+firmati a sessanta secondi.
 
 ### Migrazioni del database
 

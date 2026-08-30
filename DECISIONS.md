@@ -443,3 +443,44 @@ I due componenti di navigazione sono client (`usePathname`) per una ragione sola
 2. **Promemoria sulle scadenze fuori dall'applicazione** (calendario o email): richiede un canale di invio, quindi una decisione su un servizio terzo e sul suo costo.
 3. **Esportazione per il commercialista**: un archivio con gli XML dell'anno e il riepilogo, oggi c'è solo il CSV.
 4. I gap delle fasi precedenti restano invariati.
+
+## Fase 11: documenti e archivio annuale
+
+### Il bucket è privato, e il link scade
+
+Ricevute, contratti, quietanze F24 e Certificazioni Uniche sono dati personali — propri e di terzi. Un bucket pubblico li renderebbe leggibili a chiunque conosca l'URL, che è indovinabile quanto un identificativo: `fiscale-allegati` è quindi privato, con limite di 10 MB e tipi ammessi dichiarati **sul bucket**, non solo nell'interfaccia. Un controllo lato client è un suggerimento, non una garanzia; quello nell'interfaccia serve soltanto a non far attendere un caricamento destinato a essere respinto.
+
+Il percorso di ogni oggetto comincia con l'id dell'utente perché è il primo segmento su cui si appoggiano le policy dello Storage: **cambiare quel percorso non riordina le cartelle, disattiva l'isolamento.** Le quattro operazioni (select, insert, update, delete) sono scritte come policy separate invece che con un `for all`: un permesso concesso per errore si vede quando è scritto per esteso.
+
+I file non si servono da un URL permanente ma da un link firmato a sessanta secondi, generato al momento del click. Sessanta secondi bastano per un download e non bastano perché il link, che finisce nella cronologia del browser, resti utile a qualcun altro.
+
+### L'ordine delle operazioni, e quale guasto si preferisce
+
+In caricamento: prima lo Storage, poi la riga; se la riga fallisce, l'oggetto viene rimosso subito. In cancellazione: prima la riga, poi l'oggetto.
+
+Non è simmetria mancata, è una scelta su **quale guasto residuo si preferisce**. Una riga che punta a un file inesistente è un errore in faccia all'utente ogni volta che ci clicca sopra; un file senza riga è spazio pagato che nessuno raggiunge. Tra un guasto rumoroso e inutile e uno silenzioso e innocuo si sceglie il secondo, e lo si scrive.
+
+### ZIP senza dipendenze
+
+Serviva mettere qualche decina di file di testo in un contenitore apribile con doppio clic. Per file non compressi il formato ZIP è tre strutture note e un CRC-32: novanta righe. Lo standard di progetto vieta di introdurre una dipendenza per problemi risolvibili con poche righe dirette, e qui una dipendenza porterebbe albero transitivo, aggiornamenti e superficie da mantenere per una funzione che non cambierà — il formato è fermo dal 1993.
+
+Il costo è dichiarato: nessuna compressione, quindi l'archivio pesa quanto la somma dei file. Su XML e CSV di poche decine di KB è irrilevante, e se un giorno ci finissero le scansioni la compressione non aiuterebbe comunque, perché PDF e JPEG sono già compressi.
+
+Il test che conta non guarda le firme dei blocchi — quello passerebbe anche con un formato sbagliato — ma apre l'archivio con `unzip -t`, che ricalcola i CRC, e ne estrae il contenuto verificando anche un nome file accentato (bit 11 del general purpose flag: senza, su Windows il nome si storpia). Come per `xmllint`, se `unzip` manca il test si salta invece di fallire; in CI è installato esplicitamente.
+
+### Gli XML dell'archivio non inventano progressivi
+
+`generaXmlFattura` è una funzione pura e non tocca il registro dei nomi file. Sarebbe quindi tecnicamente possibile rigenerare l'XML di qualunque fattura per metterlo nell'archivio — e sarebbe un errore: per una fattura senza progressivo il generatore userebbe il segnaposto, producendo un file con un nome **mai assegnato**. Se quel file venisse poi trasmesso, brucerebbe quel nome all'insaputa del registro, ed è esattamente il tipo di collisione che il registro esiste per impedire (scarto SDI 00002).
+
+Nell'archivio finiscono quindi solo le fatture che un progressivo ce l'hanno già. Le altre sono **elencate nel LEGGIMI**: un'esclusione silenziosa sarebbe indistinguibile da un difetto.
+
+### Advisor di sicurezza Supabase
+
+Eseguito dopo le migrazioni: nessun rilievo sulle tabelle `fiscale_*` né sul nuovo bucket. Restano warning che appartengono all'altra applicazione del progetto condiviso (`miei_nuclei`, `posso_vedere`, `sono_staff`, `set_updated_at`) e uno di livello progetto — la protezione contro le password compromesse, disattivata. Quest'ultimo si abilita con un interruttore e non romperebbe nulla, ma è un'impostazione dell'intero progetto Supabase: tocca anche "pratiche", quindi la decisione non è unilaterale. Segnalato, non eseguito.
+
+### Cosa resta
+
+1. **Promemoria sulle scadenze fuori dall'applicazione**: richiede un canale di invio, cioè un servizio terzo e un costo ricorrente da decidere.
+2. **Flussi autenticati non coperti dagli end-to-end**: serve un progetto Supabase di prova.
+3. **Core Web Vitals sul campo**: non misurabili senza traffico reale.
+4. Registrazioni Supabase aperte e vecchio progetto Vercel: invariati.

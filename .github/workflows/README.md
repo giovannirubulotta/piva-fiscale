@@ -53,3 +53,32 @@ passa dai branch.
 Il numero di versione in `package.json` e `CHANGELOG.md` si alza al merge:
 **MAJOR** quando cambia il calcolo delle imposte o il formato dei documenti
 trasmessi, **MINOR** per nuove funzionalità, **PATCH** per correzioni.
+
+## Autore dei commit, e perché Vercel può rifiutare un deploy
+
+Su piano Hobby, Vercel costruisce solo i commit il cui **autore** risulta essere
+il titolare dell'account. Se l'autore è un indirizzo che GitHub non associa a
+`giovannirubulotta`, il deploy si ferma con:
+
+> The deployment was blocked because the commit author did not have contributing
+> access to the project on Vercel.
+
+Il messaggio suggerisce di passare al piano Pro, ma nel nostro caso non c'è
+nessun collaboratore da aggiungere: è lo stesso autore, con un indirizzo che
+GitHub non riconduce all'account. I commit fino alla 1.4.0 erano firmati
+`info@netrak.fr`, l'indirizzo del brand dismesso.
+
+L'autore corretto è l'indirizzo `noreply` dell'account, che GitHub garantisce
+essere associato a quell'utente e che non espone un indirizzo reale:
+
+```bash
+git config user.name  "Giovanni Rubulotta"
+git config user.email "322631924+giovannirubulotta@users.noreply.github.com"
+```
+
+La storia precedente **non è stata riscritta**: cambiare l'autore di cinquanta
+commit significa cambiarne tutti gli hash, costringere ogni copia locale a un
+`reset --hard` e mettere a rischio lavoro non ancora caricato, in cambio di
+un'attribuzione più ordinata su commit già passati. La correzione vale da qui in
+avanti; se un giorno servisse anche per il passato, si fa con `git filter-repo` e
+una `.mailmap`, sapendo cosa costa.

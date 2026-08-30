@@ -78,7 +78,25 @@ export function calcolaRiepilogoAnno(
   profilo: ProfiloFiscale,
   aliquote: AliquoteAnno
 ): RiepilogoAnno {
-  const fatturatoIncassato = fatturatoIncassatoAnno(incassi, anno);
+  return riepilogoDaFatturato(anno, fatturatoIncassatoAnno(incassi, anno), profilo, aliquote);
+}
+
+/**
+ * Il calcolo vero e proprio, a partire da un fatturato già determinato invece
+ * che dagli incassi.
+ *
+ * Esiste separato perché la previsione di fine anno deve applicare le stesse
+ * identiche regole a un fatturato ipotetico. Duplicarle là significherebbe
+ * avere due punti in cui cambiare un'aliquota o la deduzione dei contributi, e
+ * uno dei due prima o poi resterebbe indietro: la previsione mostrerebbe numeri
+ * plausibili e sbagliati, che è il modo peggiore di sbagliare.
+ */
+export function riepilogoDaFatturato(
+  anno: number,
+  fatturatoIncassato: number,
+  profilo: ProfiloFiscale,
+  aliquote: AliquoteAnno
+): RiepilogoAnno {
   const imponibile = calcolaImponibile(fatturatoIncassato, profilo.coefficienteRedditivita);
   const aliquotaSostitutivaApplicata = determinaAliquotaSostitutiva(profilo, aliquote);
   const contributiInps = round2(imponibile * aliquote.aliquotaInps);

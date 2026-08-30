@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  conseguenzeEliminazione,
+  motivoNonEliminabile,
   IMPORTO_BOLLO,
   SOGLIA_BOLLO,
   bolloDovuto,
@@ -165,5 +167,67 @@ describe("fattureComeIncassi", () => {
     expect(fattureComeIncassi([fattura({ stato: "bozza" })])[0].stato).toBe("da_incassare");
     expect(fattureComeIncassi([fattura({ stato: "emessa" })])[0].stato).toBe("da_incassare");
     expect(fattureComeIncassi([fattura({ stato: "annullata" })])[0].stato).toBe("annullata");
+  });
+});
+
+describe("motivoNonEliminabile", () => {
+  it("permette di eliminare un documento che nessuno storna", () => {
+    const f = fattura({ id: "a" });
+    expect(motivoNonEliminabile(f, [f])).toBeNull();
+  });
+
+  it("blocca se una nota di credito lo storna, e dice quale", () => {
+    const f = fattura({ id: "a", progressivo: 3 });
+    const nota = fattura({ id: "b", tipoDocumento: "TD04", fatturaRiferimentoId: "a", progressivo: 4 });
+    const motivo = motivoNonEliminabile(f, [f, nota]);
+    expect(motivo).toContain("4/2026");
+    expect(motivo).toContain("eliminala prima");
+  });
+
+  it("elenca tutte le note di credito quando sono più di una", () => {
+    const f = fattura({ id: "a" });
+    const note = [
+      fattura({ id: "b", tipoDocumento: "TD04", fatturaRiferimentoId: "a", progressivo: 4 }),
+      fattura({ id: "c", tipoDocumento: "TD04", fatturaRiferimentoId: "a", progressivo: 5 }),
+    ];
+    const motivo = motivoNonEliminabile(f, [f, ...note]);
+    expect(motivo).toContain("4/2026, 5/2026");
+    expect(motivo).toContain("eliminale prima");
+  });
+
+  it("una nota di credito che storna un altro documento non blocca questo", () => {
+    const f = fattura({ id: "a" });
+    const altra = fattura({ id: "z" });
+    const nota = fattura({ id: "b", tipoDocumento: "TD04", fatturaRiferimentoId: "z", progressivo: 4 });
+    expect(motivoNonEliminabile(f, [f, altra, nota])).toBeNull();
+  });
+
+  it("una nota di credito si elimina sempre: nessuno storna uno storno", () => {
+    const nota = fattura({ id: "b", tipoDocumento: "TD04", fatturaRiferimentoId: "a" });
+    expect(motivoNonEliminabile(nota, [fattura({ id: "a" }), nota])).toBeNull();
+  });
+});
+
+describe("conseguenzeEliminazione", () => {
+  it("su una bozza mai trasmessa avvisa solo degli allegati", () => {
+    const avvisi = conseguenzeEliminazione({ stato: "bozza", xmlProgressivo: null, tipoDocumento: "TD01" });
+    expect(avvisi).toHaveLength(1);
+    expect(avvisi[0]).toContain("allegati");
+  });
+
+  it("su un documento emesso ricorda che eliminarlo non lo annulla verso l'Agenzia", () => {
+    const avvisi = conseguenzeEliminazione({ stato: "emessa", xmlProgressivo: null, tipoDocumento: "TD01" });
+    expect(avvisi.join(" ")).toContain("nota di credito");
+  });
+
+  it("se un XML è già stato generato, dice che il numero di trasmissione resta bruciato", () => {
+    const avvisi = conseguenzeEliminazione({ stato: "emessa", xmlProgressivo: "00007", tipoDocumento: "TD01" });
+    expect(avvisi.join(" ")).toContain("00007");
+    expect(avvisi.join(" ")).toContain("non verrà riutilizzato");
+  });
+
+  it("su un documento incassato avvisa dell'effetto sul calcolo dell'anno", () => {
+    const avvisi = conseguenzeEliminazione({ stato: "incassata", xmlProgressivo: null, tipoDocumento: "TD01" });
+    expect(avvisi.join(" ")).toContain("imponibile");
   });
 });

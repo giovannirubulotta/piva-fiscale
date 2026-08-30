@@ -8,10 +8,11 @@ import {
   aggiornaStatoFattura,
   creaFattura,
   eliminaFattura,
+  leggiFatture,
   prossimoProgressivo,
   type NuovaRiga,
 } from "@/lib/data/fatture";
-import { bolloDovuto } from "@/lib/domain/fattura";
+import { bolloDovuto, motivoNonEliminabile } from "@/lib/domain/fattura";
 import type { StatoFattura, TipoDocumento } from "@/lib/domain/types";
 
 export interface EsitoForm {
@@ -126,9 +127,42 @@ export async function cambiaStatoFattura(formData: FormData): Promise<void> {
   revalidatePath(`/fatture/${id}`);
 }
 
-export async function rimuoviFattura(formData: FormData): Promise<void> {
+/**
+ * Elimina un documento.
+ *
+ * Prima controllava nulla e non catturava niente: se il database rifiutava —
+ * cosa che accade quando una nota di credito storna il documento, per via del
+ * vincolo `RESTRICT` — l'azione lanciava l'errore grezzo e l'utente vedeva una
+ * schermata di errore senza spiegazione. Il caso non è raro: è esattamente
+ * quello di chi ha sbagliato una fattura, l'ha stornata, e ora vuole fare
+ * pulizia.
+ *
+ * Ora il motivo si verifica prima e si spiega, e ogni fallimento residuo
+ * finisce nel log invece che in faccia.
+ */
+export async function rimuoviFattura(_prev: EsitoForm, formData: FormData): Promise<EsitoForm> {
   const { supabase, user } = await richiediUtente();
-  await eliminaFattura(supabase, user.id, String(formData.get("id")));
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { ...statoVuoto, errore: "Documento non indicato." };
+
+  try {
+    const tutte = await leggiFatture(supabase, user.id);
+    const fattura = tutte.find((f) => f.id === id);
+    if (!fattura) return { ...statoVuoto, errore: "Documento non trovato." };
+
+    const motivo = motivoNonEliminabile(fattura, tutte);
+    if (motivo) return { ...statoVuoto, errore: motivo };
+
+    await eliminaFattura(supabase, user.id, id);
+  } catch (causa) {
+    await registraErrore(supabase, user.id, {
+      contesto: "fatture.rimuoviFattura",
+      messaggio: "Eliminazione documento non riuscita.",
+      causa,
+    });
+    return { ...statoVuoto, errore: "Eliminazione non riuscita. L'errore è stato registrato in Diagnostica." };
+  }
+
   revalidatePath("/fatture");
   revalidatePath("/");
   redirect("/fatture");

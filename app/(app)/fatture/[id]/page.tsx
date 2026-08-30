@@ -2,16 +2,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { richiediUtente } from "@/lib/auth";
 import { leggiCliente } from "@/lib/data/clienti";
-import { leggiFattura } from "@/lib/data/fatture";
+import { leggiFattura, leggiFatture } from "@/lib/data/fatture";
 import { leggiDatiEmittente } from "@/lib/data/profilo";
-import { IMPORTO_BOLLO, dataScadenzaPagamento, numeroFattura, totaleDocumento, totaleRiga, totaleRighe } from "@/lib/domain/fattura";
+import {
+  IMPORTO_BOLLO,
+  conseguenzeEliminazione,
+  dataScadenzaPagamento,
+  motivoNonEliminabile,
+  numeroFattura,
+  totaleDocumento,
+  totaleRiga,
+  totaleRighe,
+} from "@/lib/domain/fattura";
 import { validaFatturaPerXml } from "@/lib/domain/fatturaXml";
 import { formattaData, formattaEuro } from "@/lib/ui/format";
 import { StatoBadge } from "@/components/StatoBadge";
 import { Sollecito } from "@/components/Sollecito";
 import { posizioniAperte, testoSollecito } from "@/lib/domain/pagamenti";
 import { leggiAllegatiDiFattura } from "@/lib/data/allegati";
-import { cambiaStatoFattura, rimuoviFattura, segnaIncassata } from "../actions";
+import { cambiaStatoFattura, segnaIncassata } from "../actions";
+import { EliminaDocumento } from "@/components/EliminaDocumento";
 import { nomeCliente } from "@/lib/domain/cliente";
 import type { DatiEmittente } from "@/lib/domain/types";
 
@@ -22,10 +32,11 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
   const fattura = await leggiFattura(supabase, user.id, id);
   if (!fattura) notFound();
 
-  const [cliente, emittente, allegati] = await Promise.all([
+  const [cliente, emittente, allegati, tutteLeFatture] = await Promise.all([
     leggiCliente(supabase, user.id, fattura.clienteId),
     leggiDatiEmittente(supabase, user.id),
     leggiAllegatiDiFattura(supabase, user.id, fattura.id),
+    leggiFatture(supabase, user.id),
   ]);
 
   const riferimento = fattura.fatturaRiferimentoId
@@ -244,23 +255,21 @@ export default async function PaginaFattura({ params }: { params: Promise<{ id: 
 
       {fattura.note && <p className="text-xs text-ink-faint">Note interne: {fattura.note}</p>}
 
-      <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-line">
-        {fattura.stato !== "annullata" && (
-          <form action={cambiaStatoFattura}>
-            <input type="hidden" name="id" value={fattura.id} />
-            <input type="hidden" name="stato" value="annullata" />
-            <button type="submit" className="text-xs text-ink-muted hover:text-ink">
-              annulla documento
-            </button>
-          </form>
-        )}
-        <form action={rimuoviFattura}>
+      {fattura.stato !== "annullata" && (
+        <form action={cambiaStatoFattura} className="pt-2 border-t border-line">
           <input type="hidden" name="id" value={fattura.id} />
-          <button type="submit" className="text-xs text-danger hover:underline">
-            elimina definitivamente
+          <input type="hidden" name="stato" value="annullata" />
+          <button type="submit" className="text-xs text-ink-muted hover:text-ink">
+            annulla documento
           </button>
         </form>
-      </div>
+      )}
+
+      <EliminaDocumento
+        id={fattura.id}
+        conseguenze={conseguenzeEliminazione(fattura)}
+        bloccato={motivoNonEliminabile(fattura, tutteLeFatture)}
+      />
     </div>
   );
 }

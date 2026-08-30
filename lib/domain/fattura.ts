@@ -128,3 +128,61 @@ function statoIncasso(stato: Fattura["stato"]): Incasso["stato"] {
       return "da_incassare";
   }
 }
+
+/**
+ * Perché un documento non si può eliminare, o `null` se si può.
+ *
+ * Un solo caso è davvero impossibile: una nota di credito che punta a questa
+ * fattura. Il vincolo sul database è `RESTRICT` e per una buona ragione — una
+ * nota di credito che storna un documento inesistente non significa niente — ma
+ * senza questo controllo l'utente riceveva l'errore grezzo del database, cioè
+ * nessuna spiegazione.
+ *
+ * Tutto il resto è permesso e avvisato, non vietato: il software è personale e
+ * chi lo usa sa cosa sta facendo. Vietare per prudenza avrebbe costretto a
+ * convivere con documenti sbagliati.
+ */
+export function motivoNonEliminabile(
+  fattura: Pick<Fattura, "id">,
+  tutteLeFatture: Pick<Fattura, "id" | "tipoDocumento" | "fatturaRiferimentoId" | "progressivo" | "anno">[]
+): string | null {
+  const note = tutteLeFatture.filter(
+    (f) => f.tipoDocumento === "TD04" && f.fatturaRiferimentoId === fattura.id
+  );
+  if (note.length === 0) return null;
+
+  const elenco = note.map((n) => numeroFattura(n)).join(", ");
+  return note.length === 1
+    ? `La nota di credito ${elenco} storna questo documento: eliminala prima, o resterebbe a stornare qualcosa che non esiste.`
+    : `Le note di credito ${elenco} stornano questo documento: eliminale prima, o resterebbero a stornare qualcosa che non esiste.`;
+}
+
+/**
+ * Cosa succede eliminando, detto prima di farlo. Non sono divieti: sono le
+ * conseguenze che l'utente ha diritto di conoscere mentre decide.
+ */
+export function conseguenzeEliminazione(
+  fattura: Pick<Fattura, "stato" | "xmlProgressivo" | "tipoDocumento">
+): string[] {
+  const avvisi: string[] = [];
+
+  if (fattura.stato === "emessa" || fattura.stato === "incassata") {
+    avvisi.push(
+      "Il documento risulta emesso. Se è già stato trasmesso allo SDI, eliminarlo qui non lo annulla verso l'Agenzia: per quello serve una nota di credito."
+    );
+  }
+
+  if (fattura.xmlProgressivo) {
+    avvisi.push(
+      `Il numero di trasmissione ${fattura.xmlProgressivo} resta occupato per sempre e non verrà riutilizzato: un nome file già usato viene scartato dallo SDI.`
+    );
+  }
+
+  if (fattura.stato === "incassata") {
+    avvisi.push("L'incasso sparisce dal calcolo dell'imponibile e da tutti i riepiloghi dell'anno.");
+  }
+
+  avvisi.push("Gli allegati collegati a questo documento vengono eliminati con lui.");
+
+  return avvisi;
+}

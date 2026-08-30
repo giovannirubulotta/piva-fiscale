@@ -296,6 +296,60 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscale_allegati: {
+        Row: {
+          caricato_il: string
+          descrizione: string | null
+          dimensione_byte: number | null
+          fattura_id: string | null
+          id: string
+          nome_file: string
+          percorso: string
+          spesa_id: string | null
+          tipo_mime: string | null
+          user_id: string
+        }
+        Insert: {
+          caricato_il?: string
+          descrizione?: string | null
+          dimensione_byte?: number | null
+          fattura_id?: string | null
+          id?: string
+          nome_file: string
+          percorso: string
+          spesa_id?: string | null
+          tipo_mime?: string | null
+          user_id: string
+        }
+        Update: {
+          caricato_il?: string
+          descrizione?: string | null
+          dimensione_byte?: number | null
+          fattura_id?: string | null
+          id?: string
+          nome_file?: string
+          percorso?: string
+          spesa_id?: string | null
+          tipo_mime?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_allegati_fattura_id_fkey"
+            columns: ["fattura_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_allegati_spesa_id_fkey"
+            columns: ["spesa_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_spese"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscale_clienti: {
         Row: {
           cap: string | null

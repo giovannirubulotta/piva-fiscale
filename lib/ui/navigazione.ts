@@ -24,6 +24,7 @@ export const GRUPPI_NAV: GruppoNav[] = [
     voci: [
       { href: "/", etichetta: "Dashboard" },
       { href: "/calendario", etichetta: "Calendario" },
+      { href: "/posta", etichetta: "Posta" },
       { href: "/note", etichetta: "Note" },
     ],
   },

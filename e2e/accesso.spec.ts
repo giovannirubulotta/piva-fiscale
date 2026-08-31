@@ -15,6 +15,7 @@ const ROTTE_PROTETTE = [
   "/",
   "/calendario",
   "/note",
+  "/posta",
   "/crm",
   "/preventivi",
   "/preventivi/nuovo",

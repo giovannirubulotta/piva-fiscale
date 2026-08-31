@@ -9,6 +9,25 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.8.0] — 2026-08-31
+
+Da gestionale fiscale a spazio di lavoro: calendario, note, posta, e la scheda
+cliente che diventa un fascicolo.
+
+### Aggiunto
+
+- **Calendario** che unisce sei sorgenti: agenda propria, scadenze fiscali, incassi attesi, canoni maturati, preventivi in scadenza, prossimi passi delle trattative. Una sola è memorizzata — le altre cinque sono derivate, quindi non possono essere in ritardo sui dati che le generano. Vista mensile che comincia di lunedì, pannello del giorno, «in ritardo» separato da «in arrivo», esportazione `.ics` conforme a RFC 5545.
+- **Note**: appunti liberi, collegabili a un cliente, con etichette e ricerca che ignora accenti e maiuscole. Il collegamento è facoltativo: obbligare a classificare prima di scrivere è il modo più sicuro per non annotare.
+- **Posta**: casella aziendale via IMAP e SMTP, con la password cifrata a riposo (AES-256-GCM). Lettura della posta in arrivo, invio, e un registro di cosa è uscito dall'applicazione che resta consultabile anche quando la casella non risponde.
+- **Cronologia del cliente**: contatti, note, preventivi, fatture, incassi ed eventi in un flusso unico, dal più recente. Da lì esce anche **come paga** — i giorni medi fra emissione e incasso — che è il dato su cui si decide se chiedere un acconto la prossima volta.
+- Da una scheda cliente si aprono preventivo e fattura con quel cliente già scelto.
+
+### Note
+
+- La posta richiede `CHIAVE_CIFRATURA` fra le variabili d'ambiente. Senza, la configurazione viene rifiutata invece di salvare una password in chiaro.
+- Aprire la posta costa da uno a tre secondi ogni volta: le funzioni serverless non tengono aperta una sessione IMAP fra una richiesta e l'altra. È il modello di esecuzione, ed è dichiarato nell'interfaccia.
+- L'HTML delle email in arrivo non viene mai inserito nella pagina: si legge sempre la parte testuale.
+
 ## [1.7.0] — 2026-08-30
 
 Tema chiaro e i tre moduli che restavano scoperti rispetto al gestionale preso

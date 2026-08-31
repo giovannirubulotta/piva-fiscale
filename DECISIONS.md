@@ -772,3 +772,118 @@ coprono il punto e virgola come separatore, la virgola decimale, il
 raddoppio delle virgolette interne, il CRLF e il BOM — senza il quale Excel su
 Windows sbaglia gli accenti, che è il primo motivo per cui un export "non
 funziona".
+
+## Fase 17 — Calendario, note, posta, fascicolo cliente
+
+### Derivare invece di copiare, di nuovo e in grande
+
+Il calendario ha sei sorgenti e ne memorizza **una**: l'evento scritto a mano.
+Scadenze fiscali, incassi attesi, canoni maturati, preventivi in scadenza e
+prossimi passi delle trattative sono calcolati da dati che esistono già.
+
+Una tabella di eventi copiati sarebbe vera solo finché qualcuno la
+risincronizza: sposti la data di una fattura e il calendario mostrerebbe
+ancora la vecchia; annulli un preventivo e la sua scadenza resterebbe lì.
+Derivando non c'è nessun processo di allineamento da scrivere, sorvegliare e
+riparare.
+
+Il prezzo, ed è giusto pagarlo: una voce derivata non si sposta né si cancella
+dal calendario. Si cambia il dato che la genera — la scadenza del saldo non si
+sposta trascinandola su un altro giorno.
+
+### Le insidie del formato iCalendar
+
+Tre cose che sembrano dettagli e rompono i lettori veri:
+
+1. **Le righe si piegano a 75 ottetti**, e il conteggio è in **byte UTF-8**,
+   non in caratteri. Tagliare in mezzo a una «à» produce byte non validi. Il
+   test ricompone le righe piegate e verifica che il titolo torni intatto.
+2. **`DTEND` di un evento a tutto il giorno è esclusivo**: senza il giorno
+   dopo, molti lettori mostrano un evento di durata zero o lo saltano.
+3. **Gli UID devono restare stabili** fra due generazioni. Se cambiassero, a
+   ogni aggiornamento il lettore cancellerebbe e ricreerebbe tutto, perdendo le
+   notifiche che l'utente ha impostato sui singoli eventi.
+
+Le ore si scrivono senza `Z` e senza `TZID`: ora locale fluttuante. Un
+appuntamento alle 9 resta alle 9 anche aprendo il calendario da un altro fuso,
+che per un'agenda personale è il comportamento atteso.
+
+### Il calendario si scarica, non si sottoscrive
+
+Un feed a cui Google si abbona da solo richiede un indirizzo che Google possa
+aprire **senza cookie**, cioè un segreto nell'URL: chiunque entri in possesso
+di quell'indirizzo legge agenda, nomi dei clienti e importi.
+
+È un compromesso legittimo, ma è una scelta, e non si prende di nascosto per
+conto di chi userà il software. Per ora il file si scarica e si importa —
+resta una fotografia. L'abbonamento vivo si aggiunge quando lo si vuole
+davvero, sapendo cosa comporta.
+
+### La cronologia del cliente, e «come paga»
+
+Tre elenchi affiancati — contatti, documenti, trattative — costringono a
+ricostruire a mente l'ordine dei fatti. È l'operazione che si sbaglia mentre il
+telefono squilla, quindi la fa il software.
+
+Una fattura incassata produce **due** voci, l'emissione e l'incasso, ciascuna
+alla propria data: sono due fatti che possono distare mesi, e schiacciarli in
+una riga sola cancella l'informazione che interessa. Da quella distanza esce
+`giorniMediDiIncasso`, il dato che nessun cliente dichiara di sé. Si calcola
+solo sulle fatture davvero incassate: mediare anche quelle ancora aperte darebbe
+un numero che *migliora da solo* col passare del tempo, cioè un numero senza
+significato.
+
+### La posta: cosa protegge la cifratura e cosa no
+
+AES-256-GCM e non CBC: GCM è autenticato, quindi accorgersi che il testo
+cifrato è stato manomesso fa parte della decifratura e non di un controllo che
+qualcuno può dimenticare di scrivere. IV casuale per ogni cifratura — con GCM
+riusare un IV sulla stessa chiave non indebolisce un messaggio, li compromette
+entrambi.
+
+**Protegge** da chi ottiene una copia del database, che qui è condiviso con
+un'altra applicazione. **Non protegge** da chi ha accesso al progetto su
+Vercel, dove vivono sia la chiave sia il testo cifrato. Difendersi anche da
+quello richiederebbe un gestore di segreti esterno: sproporzionato per
+un'applicazione personale, ma il limite va detto invece di lasciar credere che
+«cifrato» significhi «al sicuro da tutto». Da qui la regola scritta
+nell'interfaccia: password **dedicata alle applicazioni**, revocabile dal
+pannello del provider, mai quella principale.
+
+Senza `CHIAVE_CIFRATURA` la configurazione viene **rifiutata**, non salvata in
+chiaro con un avviso. Un avviso si chiude; una password in chiaro resta.
+
+### Perché la posta è lenta, e perché non si aggiusta
+
+Un client di posta resta connesso. Qui l'applicazione gira su funzioni che
+nascono e muoiono con la richiesta e non possono tenere aperta una sessione
+IMAP: ogni caricamento rifà TCP, TLS, LOGIN, SELECT e FETCH, da uno a tre
+secondi. Non è un difetto di implementazione, è il modello di esecuzione, ed è
+dichiarato nell'interfaccia invece di lasciar pensare che sia rotto.
+
+Le due conseguenze sono nel codice: si chiede al server **il minimo**
+indispensabile — le buste per l'elenco, il corpo solo del messaggio che si apre
+davvero, perché scaricare trenta corpi con allegati supererebbe il tempo
+massimo della richiesta — e si chiude **sempre** la connessione in un `finally`.
+I provider concedono pochi accessi simultanei per casella: una connessione
+lasciata aperta da una funzione terminata male li consuma finché il server non
+la scarta, e nel frattempo il caricamento successivo viene rifiutato — con
+l'aria di essere una password sbagliata.
+
+### L'HTML delle email non entra nella pagina
+
+Si mostra sempre la parte testuale. Iniettare l'HTML di un messaggio in arrivo
+nel documento è il modo classico di trasformare un lettore di posta in un
+vettore di script, e nessuna sanificazione vale il rischio quando la parte
+testuale c'è già.
+
+Il parser MIME è volutamente minimale — `text/plain`, quoted-printable, base64 —
+invece di importare `mailparser`: qui la posta si legge per capire cosa ha
+scritto il cliente, e per i casi che questo non copre c'è il client di posta
+vero.
+
+### Il registro degli invii si scrive dopo l'invio
+
+Non prima. Al contrario resterebbe traccia di un messaggio mai partito, e alla
+domanda «il sollecito gliel'ho già mandato?» il software risponderebbe di sì
+sbagliando — che è peggio di non avere il registro.

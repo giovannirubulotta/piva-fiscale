@@ -258,6 +258,63 @@ export type Database = {
           },
         ]
       }
+      fiscale_caselle: {
+        Row: {
+          created_at: string
+          id: string
+          imap_host: string
+          imap_password_cifrata: string
+          imap_porta: number
+          imap_utente: string
+          indirizzo: string
+          nome_mittente: string | null
+          smtp_host: string
+          smtp_password_cifrata: string
+          smtp_porta: number
+          smtp_utente: string
+          ultima_verifica: string | null
+          ultimo_errore: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          imap_host: string
+          imap_password_cifrata: string
+          imap_porta?: number
+          imap_utente: string
+          indirizzo: string
+          nome_mittente?: string | null
+          smtp_host: string
+          smtp_password_cifrata: string
+          smtp_porta?: number
+          smtp_utente: string
+          ultima_verifica?: string | null
+          ultimo_errore?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          imap_host?: string
+          imap_password_cifrata?: string
+          imap_porta?: number
+          imap_utente?: string
+          indirizzo?: string
+          nome_mittente?: string | null
+          smtp_host?: string
+          smtp_password_cifrata?: string
+          smtp_porta?: number
+          smtp_utente?: string
+          ultima_verifica?: string | null
+          ultimo_errore?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       fiscale_clienti: {
         Row: {
           cap: string | null
@@ -656,6 +713,64 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      fiscale_invii: {
+        Row: {
+          cliente_id: string | null
+          con_allegato: boolean
+          destinatario: string
+          fattura_id: string | null
+          id: string
+          inviato_il: string
+          oggetto: string
+          preventivo_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          con_allegato?: boolean
+          destinatario: string
+          fattura_id?: string | null
+          id?: string
+          inviato_il?: string
+          oggetto: string
+          preventivo_id?: string | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          con_allegato?: boolean
+          destinatario?: string
+          fattura_id?: string | null
+          id?: string
+          inviato_il?: string
+          oggetto?: string
+          preventivo_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_invii_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_invii_fattura_id_fkey"
+            columns: ["fattura_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_fatture"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_invii_preventivo_id_fkey"
+            columns: ["preventivo_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_preventivi"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fiscale_lavoro_dipendente: {
         Row: {

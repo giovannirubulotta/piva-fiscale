@@ -29,6 +29,8 @@ export async function aggiungiSpesa(_prev: EsitoForm, formData: FormData): Promi
       descrizione,
       categoria: String(formData.get("categoria") ?? "") || null,
       importo,
+      // Facoltativo: una spesa occasionale non merita una scheda anagrafica.
+      fornitoreId: String(formData.get("fornitoreId") ?? "") || null,
     });
   } catch (causa) {
     await registraErrore(supabase, user.id, {

@@ -43,16 +43,21 @@ export function NuovaFatturaForm({
   fattureStornabili,
   emittente,
   oggi,
+  clientePredefinito,
 }: {
   clienti: ClienteSelezionabile[];
   fattureStornabili: FatturaStornabile[];
   emittente: DatiEmittente;
   oggi: string;
+  /** Arrivando dalla scheda di un cliente, quel cliente e' gia' scelto. */
+  clientePredefinito?: string;
 }) {
   const [stato, invia, inCorso] = useActionState(salvaNuovaFattura, statoIniziale);
 
   const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>("TD01");
-  const [clienteId, setClienteId] = useState(clienti[0]?.id ?? "");
+  const [clienteId, setClienteId] = useState(
+    clienti.find((c) => c.id === clientePredefinito)?.id ?? clienti[0]?.id ?? ""
+  );
   const [dataEmissione, setDataEmissione] = useState(oggi);
   const [giorni, setGiorni] = useState("30");
   const [bolloRiaddebitato, setBolloRiaddebitato] = useState(emittente.bolloRiaddebitato);

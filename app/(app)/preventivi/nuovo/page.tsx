@@ -6,7 +6,9 @@ import { IntestazionePagina } from "@/components/Pagina";
 import { NuovoPreventivoForm } from "./NuovoPreventivoForm";
 import Link from "next/link";
 
-export default async function PaginaNuovoPreventivo() {
+export default async function PaginaNuovoPreventivo({ searchParams }: PageProps<"/preventivi/nuovo">) {
+  const parametri = await searchParams;
+  const clientePredefinito = typeof parametri.cliente === "string" ? parametri.cliente : undefined;
   const { supabase, user } = await richiediUtente();
 
   const [clienti, listino] = await Promise.all([
@@ -32,6 +34,7 @@ export default async function PaginaNuovoPreventivo() {
         </div>
       ) : (
         <NuovoPreventivoForm
+          clientePredefinito={clientePredefinito}
           clienti={clienti.map((c) => ({ id: c.id, nome: nomeCliente(c) }))}
           listino={listino.map((v) => ({
             id: v.id,

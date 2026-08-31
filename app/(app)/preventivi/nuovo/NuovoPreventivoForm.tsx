@@ -46,11 +46,14 @@ export function NuovoPreventivoForm({
   listino,
   oggi,
   fraTrentaGiorni,
+  clientePredefinito,
 }: {
   clienti: OpzioneCliente[];
   listino: VoceRichiamabile[];
   oggi: string;
   fraTrentaGiorni: string;
+  /** Arrivando dalla scheda di un cliente, quel cliente e' gia' scelto. */
+  clientePredefinito?: string;
 }) {
   const [stato, azione, inCorso] = useActionState(salvaNuovoPreventivo, statoIniziale);
   const [righe, setRighe] = useState<Riga[]>([rigaVuota(0)]);
@@ -92,7 +95,7 @@ export function NuovoPreventivoForm({
       <div className="scheda p-5 grid sm:grid-cols-2 gap-4">
         <label className="block">
           <span className="block text-sm mb-1.5">Cliente</span>
-          <select name="clienteId" required className="campo-input" defaultValue="">
+          <select name="clienteId" required className="campo-input" defaultValue={clientePredefinito ?? ""}>
             <option value="" disabled>
               Scegli…
             </option>

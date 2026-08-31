@@ -8,7 +8,9 @@ import { oggiRoma } from "@/lib/domain/fatturaXml";
 import { NuovaFatturaForm } from "../NuovaFatturaForm";
 import { clientePronto, identificativoFiscale, nomeCliente } from "@/lib/domain/cliente";
 
-export default async function PaginaNuovaFattura() {
+export default async function PaginaNuovaFattura({ searchParams }: PageProps<"/fatture/nuova">) {
+  const parametri = await searchParams;
+  const clientePredefinito = typeof parametri.cliente === "string" ? parametri.cliente : undefined;
   const { supabase, user } = await richiediUtente();
   const [clienti, emittente, fatture] = await Promise.all([
     leggiClienti(supabase, user.id),
@@ -43,6 +45,7 @@ export default async function PaginaNuovaFattura() {
       </div>
 
       <NuovaFatturaForm
+        clientePredefinito={clientePredefinito}
         oggi={oggiRoma()}
         emittente={
           emittente ?? {

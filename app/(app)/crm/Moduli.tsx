@@ -17,7 +17,24 @@ export interface OpzioneCliente {
  * viene a vedere. Aprirli costa un clic, il pattern è lo stesso del menu mobile
  * e del sollecito.
  */
-function Pannello({ titolo, descrizione, children }: { titolo: string; descrizione: string; children: React.ReactNode }) {
+/**
+ * Il modulo dentro un pannello richiudibile. `senzaCornice` lo mostra aperto e
+ * nudo: nella scheda cliente la cornice ci sarebbe gia', e due bordi annidati
+ * con due intestazioni che dicono la stessa cosa sono rumore.
+ */
+function Pannello({
+  titolo,
+  descrizione,
+  children,
+  senzaCornice = false,
+}: {
+  titolo: string;
+  descrizione: string;
+  children: React.ReactNode;
+  senzaCornice?: boolean;
+}) {
+  if (senzaCornice) return <>{children}</>;
+
   return (
     <details className="group rounded-xl border border-line bg-surface overflow-hidden">
       <summary className="marker:hidden [&::-webkit-details-marker]:hidden px-4 sm:px-5 py-3.5 cursor-pointer select-none flex items-center justify-between gap-4">
@@ -136,15 +153,21 @@ export function NuovaTrattativaForm({ clienti }: { clienti: OpzioneCliente[] }) 
 export function NuovaAttivitaForm({
   clienti,
   clienteFisso,
+  senzaCornice,
 }: {
   clienti: OpzioneCliente[];
   clienteFisso?: string;
+  senzaCornice?: boolean;
 }) {
   const [stato, azione, inCorso] = useActionState(aggiungiAttivita, statoIniziale);
   const oggi = new Date().toISOString().slice(0, 10);
 
   return (
-    <Pannello titolo="Registra un contatto" descrizione="Cosa è successo, e cosa va fatto dopo">
+    <Pannello
+      titolo="Registra un contatto"
+      descrizione="Cosa è successo, e cosa va fatto dopo"
+      senzaCornice={senzaCornice}
+    >
       <form action={azione} className="flex flex-col gap-4">
         <div className="grid sm:grid-cols-3 gap-4">
           {clienteFisso ? (

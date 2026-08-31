@@ -21,7 +21,11 @@ export interface GruppoNav {
 export const GRUPPI_NAV: GruppoNav[] = [
   {
     titolo: null,
-    voci: [{ href: "/", etichetta: "Dashboard" }],
+    voci: [
+      { href: "/", etichetta: "Dashboard" },
+      { href: "/calendario", etichetta: "Calendario" },
+      { href: "/note", etichetta: "Note" },
+    ],
   },
   {
     titolo: "Lavoro",
@@ -78,9 +82,9 @@ export const GRUPPI_NAV: GruppoNav[] = [
  */
 export const VOCI_BARRA_INFERIORE: VoceNav[] = [
   { href: "/", etichetta: "Home" },
+  { href: "/calendario", etichetta: "Agenda" },
   { href: "/fatture", etichetta: "Fatture" },
-  { href: "/spese", etichetta: "Spese" },
-  { href: "/scadenze", etichetta: "Scadenze" },
+  { href: "/note", etichetta: "Note" },
 ];
 
 /**

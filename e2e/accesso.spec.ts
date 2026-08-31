@@ -13,6 +13,8 @@ import { test, expect } from "@playwright/test";
 /** Ogni rotta che mostra o modifica dati fiscali. L'elenco va tenuto allineato al menu. */
 const ROTTE_PROTETTE = [
   "/",
+  "/calendario",
+  "/note",
   "/crm",
   "/preventivi",
   "/preventivi/nuovo",
@@ -49,6 +51,7 @@ test.describe("perimetro di autenticazione", () => {
   test("le API che espongono dati non rispondono senza sessione", async ({ request }) => {
     for (const endpoint of [
       "/api/report?anno=2026",
+      "/api/calendario",
       "/api/report?da=2026-01-01&a=2026-12-31",
       "/api/report?da=2026-01-01&a=2026-12-31&cosa=spese",
       "/api/fatture/00000000-0000-0000-0000-000000000000/xml",

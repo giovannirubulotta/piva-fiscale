@@ -31,6 +31,8 @@ interface Azione {
 
 const AZIONI: Azione[] = [
   { etichetta: "Nuova fattura", href: "/fatture/nuova", descrizione: "Emetti un documento" },
+  { etichetta: "Calendario", href: "/calendario", descrizione: "Agenda, scadenze, incassi attesi" },
+  { etichetta: "Note", href: "/note", descrizione: "Appunti e promemoria" },
   { etichetta: "Nuovo preventivo", href: "/preventivi/nuovo", descrizione: "Prepara un'offerta" },
   { etichetta: "Nuova serie ricorrente", href: "/ricorrenti/nuovo", descrizione: "Un canone che si ripete" },
   { etichetta: "Ricorrenti", href: "/ricorrenti", descrizione: "Canoni e scadenze maturate" },

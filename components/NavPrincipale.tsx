@@ -130,6 +130,13 @@ function Icona({ nome, attiva }: { nome: string; attiva: boolean }) {
           <path d="M7 15.5h3" />
         </svg>
       );
+    case "/note":
+      return (
+        <svg {...comune}>
+          <path d="M5 3.5h14v17H5z" />
+          <path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
+        </svg>
+      );
     default:
       return (
         <svg {...comune}>

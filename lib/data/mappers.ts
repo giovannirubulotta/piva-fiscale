@@ -103,6 +103,7 @@ export function mappaFattura(row: Tables<"fiscale_fatture">, righe: RigaFattura[
     causaleAggiuntiva: row.causale_aggiuntiva,
     note: row.note,
     xmlProgressivo: row.xml_progressivo,
+    ricorrenteId: row.ricorrente_id,
     righe: [...righe].sort((a, b) => a.numeroLinea - b.numeroLinea),
   };
 }

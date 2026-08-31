@@ -106,6 +106,8 @@ export interface NuovaFattura {
   giorniScadenzaPagamento: number;
   causaleAggiuntiva: string | null;
   note: string | null;
+  /** La serie ricorrente da cui nasce, quando nasce da una. */
+  ricorrenteId?: string | null;
   righe: NuovaRiga[];
 }
 
@@ -132,6 +134,7 @@ export async function creaFattura(
       giorni_scadenza_pagamento: dati.giorniScadenzaPagamento,
       causale_aggiuntiva: dati.causaleAggiuntiva,
       note: dati.note,
+      ricorrente_id: dati.ricorrenteId ?? null,
     })
     .select("id")
     .single();

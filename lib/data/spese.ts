@@ -7,6 +7,8 @@ export interface Spesa {
   descrizione: string;
   categoria: string | null;
   importo: number;
+  /** Facoltativo: una spesa occasionale non merita una scheda anagrafica. */
+  fornitoreId: string | null;
 }
 
 export async function leggiSpese(supabase: SupabaseClient<Database>, userId: string): Promise<Spesa[]> {
@@ -22,6 +24,7 @@ export async function leggiSpese(supabase: SupabaseClient<Database>, userId: str
     descrizione: r.descrizione,
     categoria: r.categoria,
     importo: Number(r.importo),
+    fornitoreId: r.fornitore_id,
   }));
 }
 
@@ -30,6 +33,7 @@ export interface NuovaSpesa {
   descrizione: string;
   categoria: string | null;
   importo: number;
+  fornitoreId: string | null;
 }
 
 export async function creaSpesa(supabase: SupabaseClient<Database>, userId: string, dati: NuovaSpesa): Promise<void> {
@@ -39,6 +43,7 @@ export async function creaSpesa(supabase: SupabaseClient<Database>, userId: stri
     descrizione: dati.descrizione,
     categoria: dati.categoria,
     importo: dati.importo,
+    fornitore_id: dati.fornitoreId,
   });
   if (error) throw error;
 }

@@ -405,6 +405,75 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscale_eventi: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          data_fine: string | null
+          data_inizio: string
+          descrizione: string | null
+          id: string
+          luogo: string | null
+          ora_fine: string | null
+          ora_inizio: string | null
+          tipo: string
+          titolo: string
+          trattativa_id: string | null
+          tutto_il_giorno: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          data_fine?: string | null
+          data_inizio: string
+          descrizione?: string | null
+          id?: string
+          luogo?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
+          tipo?: string
+          titolo: string
+          trattativa_id?: string | null
+          tutto_il_giorno?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          data_fine?: string | null
+          data_inizio?: string
+          descrizione?: string | null
+          id?: string
+          luogo?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
+          tipo?: string
+          titolo?: string
+          trattativa_id?: string | null
+          tutto_il_giorno?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_eventi_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_eventi_trattativa_id_fkey"
+            columns: ["trattativa_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_trattative"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fiscale_fattura_righe: {
         Row: {
           created_at: string
@@ -701,6 +770,60 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      fiscale_note: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          etichette: string[]
+          fissata: boolean
+          id: string
+          testo: string
+          titolo: string | null
+          trattativa_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          etichette?: string[]
+          fissata?: boolean
+          id?: string
+          testo: string
+          titolo?: string | null
+          trattativa_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          etichette?: string[]
+          fissata?: boolean
+          id?: string
+          testo?: string
+          titolo?: string | null
+          trattativa_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscale_note_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscale_note_trattativa_id_fkey"
+            columns: ["trattativa_id"]
+            isOneToOne: false
+            referencedRelation: "fiscale_trattative"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fiscale_preventivi: {
         Row: {

@@ -14,6 +14,7 @@ import { leggiStatiScadenze } from "@/lib/data/scadenzeStato";
 import { leggiRequisitiForfettario } from "@/lib/data/requisitiForfettario";
 import { contaErroriRecenti } from "@/lib/data/logErrori";
 import { calcolaRiepilogoAnno, aliquoteAnno, fatturatoIncassatoAnno } from "@/lib/domain/calcolo";
+import { riepilogoOperativo } from "@/lib/domain/report";
 import { riepiloghiAnniChiusi } from "@/lib/domain/orchestrazione";
 import { generaScadenzeAnnuali, generaScadenzeBollo } from "@/lib/domain/scadenzario";
 import { valutaRequisitiForfettario, valutaSoglieForfettario } from "@/lib/domain/requisitiForfettario";
@@ -98,6 +99,12 @@ export default async function Dashboard() {
   const aperto = totaleAperto(posizioni);
   const scaduto = totaleScaduto(posizioni);
 
+  const operativo = riepilogoOperativo(fatture, {
+    da: `${annoCorrente}-01-01`,
+    a: `${annoCorrente}-12-31`,
+    etichetta: `Anno ${annoCorrente}`,
+  });
+
   return (
     <div className="flex flex-col gap-8">
       <IntestazionePagina
@@ -147,18 +154,65 @@ export default async function Dashboard() {
         </div>
       )}
 
+      {/* I tre numeri del mestiere, prima di qualunque calcolo fiscale.
+          Emesso è quanto hai lavorato, incassato è quanto hai preso, il terzo è
+          la differenza — cioè i soldi che sono usciti dal tuo tempo e non sono
+          ancora entrati in banca. Sono la prima riga perché sono la prima cosa
+          che si vuole sapere aprendo l'applicazione. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Metrica
+          etichetta={`Fatturato emesso ${annoCorrente}`}
+          valore={formattaEuro(operativo.emesso)}
+          nota={
+            operativo.numeroFatture === 1
+              ? "1 fattura emessa quest'anno"
+              : `${operativo.numeroFatture} fatture emesse quest'anno`
+          }
+        />
+        <Metrica
+          etichetta={`Incassato ${annoCorrente}`}
+          valore={formattaEuro(operativo.incassato)}
+          stato="ok"
+          nota="Solo questo conta per le tasse: il forfettario tassa per cassa."
+        />
+        <Metrica
+          etichetta="Ancora da incassare"
+          valore={formattaEuro(operativo.daIncassare)}
+          stato={scaduto > 0 ? "danger" : operativo.daIncassare > 0 ? "warn" : undefined}
+          nota={
+            scaduto > 0
+              ? `di cui ${formattaEuro(scaduto)} già oltre la scadenza`
+              : operativo.daIncassare > 0
+                ? "nulla in ritardo, per ora"
+                : "tutto incassato"
+          }
+        />
+      </div>
+
       <PrevisioneAnno previsione={previsione} />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Metrica etichetta="Fatturato incassato YTD" valore={formattaEuro(riepilogoCorrente.fatturatoIncassato)} />
-        <Metrica etichetta="Imponibile stimato" valore={formattaEuro(riepilogoCorrente.imponibile)} />
-        <Metrica
-          etichetta={`Imposta sostitutiva (${(riepilogoCorrente.aliquotaSostitutivaApplicata * 100).toFixed(0)}%)`}
-          valore={formattaEuro(riepilogoCorrente.impostaSostitutiva)}
-        />
-        <Metrica etichetta="Contributi INPS stimati" valore={formattaEuro(riepilogoCorrente.contributiInps)} />
-        <Metrica etichetta="Totale da accantonare" valore={formattaEuro(riepilogoCorrente.totaleDovuto)} accento />
-        <Metrica etichetta="Netto stimato in tasca" valore={formattaEuro(riepilogoCorrente.nettoStimato)} />
+      <div>
+        <TitoloSezione collegamento={{ href: "/quadro-lm", testo: "Quadro LM" }}>
+          Da accantonare sull&apos;incassato
+        </TitoloSezione>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Metrica etichetta="Imponibile stimato" valore={formattaEuro(riepilogoCorrente.imponibile)} />
+          <Metrica
+            etichetta="Contributi INPS stimati"
+            valore={formattaEuro(riepilogoCorrente.contributiInps)}
+          />
+          <Metrica
+            etichetta={`Imposta sostitutiva (${(riepilogoCorrente.aliquotaSostitutivaApplicata * 100).toFixed(0)}%)`}
+            valore={formattaEuro(riepilogoCorrente.impostaSostitutiva)}
+            nota="Al netto dei contributi, come vuole l'art. 1 c. 64 L. 190/2014."
+          />
+          <Metrica
+            etichetta="Totale da mettere da parte"
+            valore={formattaEuro(riepilogoCorrente.totaleDovuto)}
+            accento
+            nota={`Restano ${formattaEuro(riepilogoCorrente.nettoStimato)}`}
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
@@ -277,6 +331,29 @@ export default async function Dashboard() {
 
       <AndamentoFatturato serie={[serieAnno(incassi, annoCorrente), serieAnno(incassi, annoCorrente - 1)]} />
 
+      {/* La striscia in fondo, come nel gestionale di riferimento — ma con
+          numeri che rispondono a una domanda invece di tre voci accostate.
+          La fattura media è il dato che dice se conviene alzare i prezzi o
+          prendere più lavori. */}
+      {operativo.numeroFatture > 0 && (
+        <div className="scheda px-4 sm:px-5 py-3 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+          <span className="text-ink-muted">
+            Fattura media <span className="text-ink font-medium tabular-nums">{formattaEuro(operativo.fatturaMedia)}</span>
+          </span>
+          <span className="text-ink-muted">
+            Documenti emessi <span className="text-ink font-medium tabular-nums">{operativo.numeroFatture}</span>
+            {operativo.numeroNoteCredito > 0 && (
+              <span className="text-ink-faint">
+                {" "}
+                + {operativo.numeroNoteCredito} {operativo.numeroNoteCredito === 1 ? "nota" : "note"} di credito
+              </span>
+            )}
+          </span>
+          <Link href="/report" className="text-accent hover:underline ml-auto">
+            Report completo →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

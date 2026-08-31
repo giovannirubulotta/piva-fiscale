@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   // Su iOS Safari evidenzia da sé come link telefonici le sequenze di cifre:
   // partite IVA, codici tributo e importi non sono numeri di telefono.
   formatDetection: { telephone: false },
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Fiscale" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Fiscale" },
 };
 
 export const viewport: Viewport = {
@@ -22,7 +22,10 @@ export const viewport: Viewport = {
   // Lo zoom resta abilitato: bloccarlo è una barriera di accessibilità, e su
   // una schermata fitta di importi serve poterli ingrandire.
   maximumScale: 5,
-  themeColor: "#0a0c10",
+  // L'ambra della barra alta: su Android la barra di sistema prende questo
+  // colore, e se restasse quella di prima il telefono disegnerebbe una fascia
+  // scura sopra un'intestazione chiara.
+  themeColor: "#e5a53b",
   viewportFit: "cover",
 };
 

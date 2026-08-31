@@ -32,10 +32,14 @@ interface Azione {
 const AZIONI: Azione[] = [
   { etichetta: "Nuova fattura", href: "/fatture/nuova", descrizione: "Emetti un documento" },
   { etichetta: "Nuovo preventivo", href: "/preventivi/nuovo", descrizione: "Prepara un'offerta" },
+  { etichetta: "Nuova serie ricorrente", href: "/ricorrenti/nuovo", descrizione: "Un canone che si ripete" },
+  { etichetta: "Ricorrenti", href: "/ricorrenti", descrizione: "Canoni e scadenze maturate" },
+  { etichetta: "Report", href: "/report", descrizione: "Fatturato, clienti, spese" },
   { etichetta: "Listino", href: "/listino", descrizione: "Prestazioni ricorrenti" },
   { etichetta: "Nuovo cliente", href: "/clienti/nuovo", descrizione: "Aggiungi in anagrafica" },
   { etichetta: "Trattative", href: "/crm", descrizione: "Pipeline e prossimi passi" },
   { etichetta: "Registra spesa", href: "/spese", descrizione: "Annota un costo" },
+  { etichetta: "Fornitori", href: "/fornitori", descrizione: "Chi ti fattura" },
   { etichetta: "Carica documento", href: "/documenti", descrizione: "Archivia un file" },
   { etichetta: "Scadenze", href: "/scadenze", descrizione: "Cosa devi versare" },
   { etichetta: "Genera F24", href: "/f24", descrizione: "Prepara il modello" },
@@ -147,7 +151,7 @@ export function BarraComando() {
       <button
         type="button"
         onClick={apri}
-        className="flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 h-9 text-sm text-ink-muted hover:text-ink hover:border-ink-faint transition w-full max-w-md"
+        className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 h-9 text-sm text-ink-muted hover:text-ink hover:border-ink-faint transition w-full max-w-md"
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
@@ -163,7 +167,7 @@ export function BarraComando() {
         ref={dialogo}
         onClose={chiudi}
         onClick={clicSuSfondo}
-        className="m-0 mx-auto mt-[10vh] w-[min(38rem,92vw)] rounded-xl border border-line bg-surface p-0 text-ink backdrop:bg-black/60"
+        className="m-0 mx-auto mt-[10vh] w-[min(38rem,92vw)] rounded-xl border border-line bg-surface p-0 text-ink shadow-[var(--ombra-alta)] backdrop:bg-ink/25"
         aria-label="Cerca o esegui un comando"
       >
         <div className="border-b border-line px-4 py-3">

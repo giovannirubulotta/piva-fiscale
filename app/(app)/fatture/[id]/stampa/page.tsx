@@ -42,7 +42,7 @@ export default async function PaginaStampaFattura({ params }: { params: Promise<
       <style>{`
         @media print {
           /* La chrome dell'app non deve finire sul foglio: resta solo il documento. */
-          aside, details.group, .non-stampare { display: none !important; }
+          aside, details.group, header.barra-brand, nav[aria-label="Navigazione rapida"], .non-stampare { display: none !important; }
           main { overflow: visible !important; }
           html, body { background: #fff !important; color: #111 !important; }
           .foglio { border: none !important; box-shadow: none !important; padding: 0 !important; }

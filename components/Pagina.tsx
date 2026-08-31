@@ -47,8 +47,16 @@ export function IntestazionePagina({
 }
 
 /**
- * Un numero con la sua etichetta. `accento` si usa per il valore che la pagina
- * esiste per mostrare — uno per schermata, altrimenti non accentua più niente.
+ * Un numero con la sua etichetta.
+ *
+ * La cifra grande e scansionabile è la cosa che il gestionale di riferimento fa
+ * bene, ed è tenuta. Quello che cambia è la gerarchia: lì etichetta e numero
+ * hanno quasi lo stesso peso e si contendono l'occhio; qui l'etichetta è
+ * piccola, in maiuscoletto spaziato, sopra — si legge una volta e poi sparisce,
+ * lasciando leggere i numeri in colonna.
+ *
+ * `accento` si usa per il valore che la pagina esiste per mostrare — uno per
+ * schermata, altrimenti non accentua più niente.
  */
 export function Metrica({
   etichetta,
@@ -56,6 +64,7 @@ export function Metrica({
   nota,
   accento,
   stato,
+  secondario,
 }: {
   etichetta: string;
   valore: string;
@@ -63,6 +72,8 @@ export function Metrica({
   accento?: boolean;
   /** Colore semantico: si usa quando il numero *è* uno stato, non per decorare. */
   stato?: "ok" | "warn" | "danger";
+  /** Una seconda cifra sulla stessa riga: il contraltare della prima. */
+  secondario?: { etichetta: string; valore: string };
 }) {
   const colore = stato
     ? { ok: "text-ok", warn: "text-warn", danger: "text-danger" }[stato]
@@ -71,14 +82,43 @@ export function Metrica({
       : "text-ink";
 
   return (
-    <div className="scheda p-4 flex flex-col gap-1.5">
-      <div className="text-xs text-ink-muted leading-snug">{etichetta}</div>
-      <div className={`text-[1.375rem] leading-none font-semibold tabular-nums tracking-[-0.01em] ${colore}`}>
-        {valore}
+    <div className="scheda p-4 flex flex-col gap-2">
+      <div className="etichetta-cifra leading-snug">{etichetta}</div>
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <div className={`cifra ${colore}`}>{valore}</div>
+        {secondario && (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium tabular-nums text-ink-muted">{secondario.valore}</span>
+            <span className="text-[0.6875rem] text-ink-faint leading-tight">{secondario.etichetta}</span>
+          </div>
+        )}
       </div>
       {nota && <div className="text-xs text-ink-faint leading-snug">{nota}</div>}
     </div>
   );
+}
+
+/**
+ * Pastiglia di stato. Il colore da solo non basta — circa un uomo su dodici non
+ * distingue rosso e verde — quindi porta sempre l'etichetta scritta, e il fondo
+ * tenue è la ridondanza, non l'informazione.
+ */
+export function Pillola({
+  children,
+  tono = "neutro",
+}: {
+  children: React.ReactNode;
+  tono?: "neutro" | "accento" | "ok" | "warn" | "danger";
+}) {
+  const stile = {
+    neutro: "bg-surface-2 text-ink-muted",
+    accento: "bg-accent-soft text-accent",
+    ok: "bg-ok-soft text-ok",
+    warn: "bg-warn-soft text-warn",
+    danger: "bg-danger-soft text-danger",
+  }[tono];
+
+  return <span className={`pillola ${stile}`}>{children}</span>;
 }
 
 /** Contenitore standard: bordo, superficie, angoli. Il resto lo mette chi lo usa. */

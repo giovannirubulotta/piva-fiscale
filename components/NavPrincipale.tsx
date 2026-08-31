@@ -31,9 +31,13 @@ export function MenuCompleto({ compatto = false }: { compatto?: boolean }) {
                 key={voce.href}
                 href={voce.href}
                 aria-current={attiva ? "page" : undefined}
-                className={`rounded-lg px-3 text-sm transition ${compatto ? "py-2.5" : "py-2"} ${
+                /* La voce attiva porta anche una barretta a sinistra, non solo
+                   un fondo colorato: chi non distingue i colori vede comunque
+                   dove si trova, e a colpo d'occhio la barretta si legge prima
+                   della tinta. */
+                className={`relative rounded-lg pl-4 pr-3 text-sm transition ${compatto ? "py-2.5" : "py-2"} ${
                   attiva
-                    ? "bg-accent-soft text-accent font-medium"
+                    ? "bg-accent-soft text-accent font-medium before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-brand before:content-['']"
                     : "text-ink-muted hover:text-ink hover:bg-surface-2"
                 }`}
               >

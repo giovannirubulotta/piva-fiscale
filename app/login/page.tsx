@@ -17,13 +17,18 @@ export default function PaginaLogin() {
   return (
     <main className="flex-1 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="text-sm tracking-[0.2em] text-accent font-medium mb-1">GAR</div>
+        <div className="mb-8 text-center flex flex-col items-center">
+          {/* La marca compare anche qui: l'accesso è la prima schermata, e senza
+              l'ambra sarebbe l'unica pagina che non sembra la stessa applicazione. */}
+          <span className="barra-brand inline-flex items-baseline gap-2 rounded-lg px-3 py-1.5 mb-3">
+            <span className="text-sm tracking-[0.2em] font-semibold">GAR</span>
+            <span className="text-sm opacity-70">Studio</span>
+          </span>
           <h1 className="text-xl font-semibold text-ink">Gestione fiscale P.IVA</h1>
           <p className="text-sm text-ink-muted mt-1">Regime forfettario · Gestione Separata INPS</p>
         </div>
 
-        <div className="bg-surface border border-line rounded-xl p-6">
+        <div className="scheda p-6">
           <div className="flex gap-1 mb-6 bg-surface-2 rounded-lg p-1 text-sm">
             <button
               type="button"

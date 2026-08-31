@@ -46,6 +46,7 @@ function fattura(overrides: Partial<Fattura> = {}): Fattura {
     causaleAggiuntiva: null,
     note: null,
     xmlProgressivo: null,
+    ricorrenteId: null,
     righe: [riga()],
     ...overrides,
   };

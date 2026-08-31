@@ -140,6 +140,7 @@ describe("coerenza fra clientePronto e la validazione XML", () => {
     causaleAggiuntiva: null,
     note: null,
     xmlProgressivo: null,
+    ricorrenteId: null,
     righe: [{ id: "r1", numeroLinea: 1, descrizione: "Consulenza", quantita: 1, unitaMisura: null, prezzoUnitario: 100 }],
   };
 

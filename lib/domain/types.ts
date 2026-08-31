@@ -125,6 +125,12 @@ export interface Fattura {
   note: string | null;
   /** Progressivo del nome file XML, assegnato alla prima generazione e mai riusato. */
   xmlProgressivo: string | null;
+  /**
+   * La serie ricorrente da cui è nata, se è nata da una. È una colonna e non
+   * una stringa dentro le note: ritrovare le fatture di un canone cercando
+   * testo nelle note significa perderle appena qualcuno rinomina la serie.
+   */
+  ricorrenteId: string | null;
   righe: RigaFattura[];
 }
 

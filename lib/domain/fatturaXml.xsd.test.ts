@@ -124,6 +124,7 @@ const base: Fattura = {
   causaleAggiuntiva: null,
   note: null,
   xmlProgressivo: "00001",
+  ricorrenteId: null,
   righe: [
     { id: "r1", numeroLinea: 1, descrizione: "Consulenza <strategica> & analisi", quantita: 2, unitaMisura: "ore", prezzoUnitario: 500 },
   ],

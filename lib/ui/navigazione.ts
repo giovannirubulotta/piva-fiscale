@@ -29,11 +29,22 @@ export const GRUPPI_NAV: GruppoNav[] = [
       { href: "/crm", etichetta: "Trattative" },
       { href: "/preventivi", etichetta: "Preventivi" },
       { href: "/fatture", etichetta: "Fatture" },
+      { href: "/ricorrenti", etichetta: "Ricorrenti" },
       { href: "/clienti", etichetta: "Clienti" },
-      { href: "/spese", etichetta: "Spese" },
       { href: "/listino", etichetta: "Listino" },
       { href: "/documenti", etichetta: "Documenti" },
     ],
+  },
+  {
+    titolo: "Uscite",
+    voci: [
+      { href: "/spese", etichetta: "Spese" },
+      { href: "/fornitori", etichetta: "Fornitori" },
+    ],
+  },
+  {
+    titolo: "Analisi",
+    voci: [{ href: "/report", etichetta: "Report" }],
   },
   {
     titolo: "Fisco",

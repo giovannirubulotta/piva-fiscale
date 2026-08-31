@@ -19,9 +19,13 @@ const ROTTE_PROTETTE = [
   "/listino",
   "/fatture",
   "/fatture/nuova",
+  "/ricorrenti",
+  "/ricorrenti/nuovo",
   "/clienti",
   "/clienti/nuovo",
   "/spese",
+  "/fornitori",
+  "/report",
   "/documenti",
   "/scadenze",
   "/f24",
@@ -45,6 +49,8 @@ test.describe("perimetro di autenticazione", () => {
   test("le API che espongono dati non rispondono senza sessione", async ({ request }) => {
     for (const endpoint of [
       "/api/report?anno=2026",
+      "/api/report?da=2026-01-01&a=2026-12-31",
+      "/api/report?da=2026-01-01&a=2026-12-31&cosa=spese",
       "/api/fatture/00000000-0000-0000-0000-000000000000/xml",
       "/api/allegati/00000000-0000-0000-0000-000000000000",
       "/api/esportazione?anno=2026",

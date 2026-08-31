@@ -9,6 +9,26 @@ atteso.
 
 Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/).
 
+## [1.7.0] — 2026-08-30
+
+Tema chiaro e i tre moduli che restavano scoperti rispetto al gestionale preso
+a riferimento: canoni ricorrenti, anagrafica fornitori, report.
+
+### Modificato
+
+- **Tema chiaro.** La palette è estratta con clustering k-means dalla schermata di riferimento, non scelta a occhio: ne escono l'ambra `#e5a53b`, un blu profondo, i grigi di superficie. Poi la correzione — quell'ambra su bianco dà 2,15:1, meno della metà del minimo WCAG AA: resta intatta come superficie della barra alta, dove sopra ci va inchiostro scuro (7,87:1), e diventa un bronzo scuro dove deve essere testo. Ogni tinta d'accento è portata al valore *più chiaro* che superi 4,5:1 sullo sfondo peggiore.
+- **Telaio dell'applicazione**: barra ambra a tutta larghezza, colonna di navigazione raggruppata sotto, contenuto su grigio chiaro. La voce attiva porta una barretta laterale oltre al colore, così si legge anche senza distinguere le tinte.
+- Il controllo del contrasto in CI copre ora **33 combinazioni** invece di 21: le velature, i fondi pieni dei pulsanti e la barra ambra non erano verificati, ed erano proprio i punti col colore più saturo.
+- Il cruscotto apre con **emesso / incassato / da incassare**, che è la struttura giusta del riferimento; sotto, il blocco fiscale con la nota che l'imposta è calcolata al netto dei contributi.
+- Le spese si possono collegare a un fornitore, e la tabella lo mostra.
+
+### Aggiunto
+
+- **Canoni ricorrenti**: cadenza da mensile ad annuale, scadenze ancorate all'inizio della serie — il 31 gennaio più un mese si ferma al 28 e a marzo torna al 31 — arretrati visibili, sospensione senza perdita. Le fatture nascono **in bozza, una alla volta**: un documento fiscale con un progressivo che non si riusa non lo emette un processo notturno.
+- **Anagrafica fornitori**, collegata alle spese, con il totale speso e la quota per ciascuno. La categoria abituale si propone da sé quando si registra una spesa.
+- **Report** con periodo nell'indirizzo (quindi salvabile tra i preferiti): fatturato emesso, incassato, credito a fine periodo, fattura media, classifica per cliente con la quota, spese per categoria e per fornitore, esportazione CSV di fatture e spese.
+- Avviso di **concentrazione** quando un committente supera la metà del fatturato del periodo: per chi lavora da solo è il rischio principale del mestiere.
+
 ## [1.6.0] — 2026-08-30
 
 Le due funzionalità che il gestionale di regime-forfettario.it ha e qui

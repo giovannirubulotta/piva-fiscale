@@ -646,3 +646,129 @@ L'aritmetica dell'anteprima del totale nel modulo è la stessa del dominio, in c
 ### Non costruito, per ora
 
 Il **simulatore pubblico** e l'**assistente sul forfettario** sono stati proposti e non scelti. Del secondo vale la pena registrare il perché sarebbe una decisione e non una funzionalità: richiede una chiave API a consumo, quindi un costo ricorrente da misurare, oltre ad ancoraggio su fonti reali, guardrail su input e output e un comportamento definito quando il servizio non risponde — tutto ciò che lo standard di progetto esige da un'integrazione di IA.
+
+## Fase 16 — Tema chiaro, ricorrenti, fornitori, report
+
+Punto di partenza: due schermate del gestionale di regime-forfettario.it e
+l'istruzione «copia l'UI e migliorala, light».
+
+### La palette si estrae, non si sceglie a occhio
+
+Clustering k-means (8 cluster, spazio RGB) sulla sola area dell'interfaccia
+nella schermata, escludendo la cornice del mockup. Ne escono `#fdfdfd` (71%
+dei pixel), `#ecefef`, l'ambra `#e5a53b`, il grigio di bordo `#c8cccc`,
+l'inchiostro `#272829` e un blu profondo `#0b496a`. È il processo che lo
+standard di progetto prescrive per la discovery da materiale visivo, e serve a
+poter dire *perché* un colore è quello e non un altro.
+
+### L'ambra è una superficie, non un testo
+
+`#e5a53b` su bianco dà **2,15:1**: meno della metà del minimo AA. Un colore
+fedele ma non conforme si corregge in luminosità, non si scarta — quindi
+l'ambra resta **identica** dove fa da superficie (la barra alta, con
+`--brand-ink` sopra: 7,87:1) e diventa un bronzo scuro `#8f5f10` dove deve
+essere testo, che è il token `--warn`.
+
+Conseguenza controintuitiva da tenere a mente: **una barra ambra con scritte
+bianche è illeggibile** (2,15:1). È la scelta istintiva ed è sbagliata; il
+commento in `globals.css` lo dice esplicitamente perché è il tipo di cosa che
+qualcuno "correggerà" in buona fede.
+
+Le altre tinte d'accento sono portate al valore *più chiaro* che superi 4,5:1
+sullo sfondo peggiore: il massimo di colore che l'accessibilità concede,
+invece del primo grigio prudente.
+
+### Il controllo del contrasto copriva metà dei casi
+
+Verificava il prodotto cartesiano di 7 token di testo × 3 sfondi = 21
+combinazioni. Restavano fuori le velature (`--*-soft`), il bianco sui fondi
+pieni dei pulsanti e la barra ambra — cioè proprio i punti dove il colore è più
+saturo. Ora sono 33 combinazioni, con le coppie non cartesiane elencate
+esplicitamente: verificarle contro *ogni* token darebbe fallimenti finti.
+
+### Cosa di quella schermata è stato copiato, e cosa no
+
+Copiato, perché è giusto: l'impianto (barra alta, colonna, contenuto), le
+cifre grandi e scansionabili, i tre numeri di fatturato in apertura.
+
+Non copiato:
+
+- La **colonna dei video tutorial**, un terzo di schermo per qualcosa che si
+  guarda una volta.
+- Lo stato della **licenza** dentro il cruscotto: non è un dato dell'attività.
+- I **due controlli di periodo** affiancati (Giorno/Settimana/Mese *e* un
+  intervallo di date) che fanno la stessa cosa e possono contraddirsi. Nel
+  report ce n'è uno solo, e vive nell'indirizzo.
+- L'**elenco piatto** di dodici voci di menu.
+- Il loro calcolo delle **tasse presunte**. I loro numeri tornano così:
+  21.516 × 78% = 16.782 di imponibile; × 25,72% = 4.316,45 (il loro dato INPS,
+  esatto al centesimo); × 5% = 839,12 (le loro tasse presunte, esatte al
+  centesimo). Applicano cioè l'aliquota al reddito **lordo**, mentre l'art. 1
+  c. 64 L. 190/2014 lo riduce dei contributi *prima*. Su quei numeri il conto
+  corretto è (16.782 − 4.316) × 5% = 623 €. Lo dichiarano nella nota sotto la
+  cifra, quindi è prudenza dichiarata e non un errore nascosto — ma è l'unico
+  punto in cui copiarli sarebbe stato un peggioramento.
+
+### Le ricorrenze si ancorano all'inizio, non si concatenano
+
+`dataOccorrenza(serie, n)` somma `n × mesi` alla data di inizio. Concatenando
+— ogni scadenza calcolata dalla precedente — un canone partito il 31 gennaio
+diventerebbe 28 febbraio, poi 28 marzo, poi 28 aprile: la serie perderebbe tre
+giorni **per sempre** dopo un solo mese corto. Ancorata all'inizio, febbraio si
+accorcia e marzo torna al 31.
+
+`aggiungiMesi` tronca al mese di arrivo invece di lasciar traboccare `Date`,
+che accetta il 31 febbraio e lo riporta al 3 marzo. È l'errore classico di
+`setMonth`, e ha un test per ciascun caso.
+
+### Le fatture ricorrenti non partono da sole
+
+La serie calcola e propone; l'emissione resta un gesto. Una fattura è un
+documento fiscale con un progressivo che non si riusa: farla generare a un
+processo notturno significa che il primo dato sbagliato — un cliente cessato,
+un prezzo cambiato a voce — diventa un documento da stornare con nota di
+credito invece che una riga da correggere.
+
+Con tre arretrati si emette **la più vecchia**, una alla volta, in bozza. La
+data della fattura è quella della scadenza maturata e non di oggi: il canone di
+marzo emesso in ritardo resta il canone di marzo. E `ultimaEmissione` si scrive
+**dopo** che la fattura esiste: al contrario, un errore lascerebbe la serie
+convinta di aver fatturato un mese che non ha fatturato, e quel canone non lo
+recupererebbe più nessuno.
+
+### `ricorrente_id` è una colonna, non una stringa nelle note
+
+La prima stesura ritrovava le fatture di una serie cercando il nome della serie
+dentro il campo note. Funziona finché nessuno rinomina la serie. La colonna con
+vincolo di chiave esterna costa una migrazione e non ha quel difetto.
+
+### Il fornitore è facoltativo
+
+Collegare una spesa a una scheda anagrafica non è obbligatorio: una spesa da un
+negozio in cui non tornerai non merita una scheda. Ma quando c'è, rende
+sommabile ciò che prima non lo era — "Aruba", "aruba.it" e "Rinnovo hosting
+Aruba" erano tre stringhe diverse. Il report distingue il tracciato dal non
+tracciato invece di far finta che il totale sia completo.
+
+### Il periodo del report vive nell'indirizzo
+
+`/report?da=…&a=…`, non uno stato del componente. Un filtro che vive solo nello
+stato si azzera a ogni ricarica e non si può mettere tra i preferiti né
+mandare a qualcuno.
+
+### Emesso e incassato sono due numeri diversi
+
+E vanno mostrati entrambi. In regime forfettario le tasse si pagano per cassa,
+quindi solo l'incassato conta per il fisco; l'emesso dice quanto hai lavorato.
+Un cruscotto che ne mostra uno solo mente in una delle due direzioni. Il
+"da incassare" è una fotografia a fine periodo e comprende gli arretrati più
+vecchi del periodo stesso — che è precisamente il credito che si dimentica.
+
+### La composizione del CSV è scesa nel dominio
+
+Era una funzione di escape scritta a mano dentro una route HTTP, cioè in un
+punto dove nessuno la prova. Ora `componiCsv` sta in `report.ts` con i test che
+coprono il punto e virgola come separatore, la virgola decimale, il
+raddoppio delle virgolette interne, il CRLF e il BOM — senza il quale Excel su
+Windows sbaglia gli accenti, che è il primo motivo per cui un export "non
+funziona".
